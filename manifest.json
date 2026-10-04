@@ -1,7 +1,7 @@
 {
   "id": "attendance-v23",
-  "name": "حضور وحفظ",
-  "short_name": "حضور وحفظ",
+  "name": "دار الحافظ",
+  "short_name": "دار الحافظ",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

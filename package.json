@@ -1,8 +1,8 @@
 {
-  "name": "attendance",
-  "version": "19.6.0",
+  "name": "dar-alhafez",
+  "version": "20.0.0",
   "private": true,
-  "description": "Local-first attendance and memorization PWA packaged with Capacitor",
+  "description": "دار الحافظ — Local-first attendance, memorization and payments PWA packaged with Capacitor",
   "scripts": {
     "prepare:web": "python3 tools/prepare_native.py"
   },
@@ -12,6 +12,7 @@
   "devDependencies": {
     "@capacitor/cli": "8.5.2",
     "@capacitor/android": "8.5.2",
-    "@capacitor/ios": "8.5.2"
+    "@capacitor/ios": "8.5.2",
+    "@capacitor/assets": "3.0.5"
   }
 }

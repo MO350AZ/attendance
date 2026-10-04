@@ -1,7 +1,8 @@
 const CACHE='attendance-pwa-v23';
 const CORE=['./','./index.html','./manifest.json','./icon-512.png'];
 const EXTERNAL=[
-  'https://unpkg.com/qr-scanner@1.4.2/qr-scanner.legacy.min.js'
+  'https://unpkg.com/qr-scanner@1.4.2/qr-scanner.legacy.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'
 ];
 self.addEventListener('install',event=>event.waitUntil((async()=>{
   const cache=await caches.open(CACHE);
