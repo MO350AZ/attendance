@@ -19,8 +19,8 @@ jobs:
         with:
           node-version: 24
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - name: Setup Java 21
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -28,16 +28,21 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Prepare packaged web app
+      - name: Prepare web app
         run: |
           mkdir -p www
-          curl -fsSL https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.legacy.min.js \
+
+          curl -fsSL \
+            https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.legacy.min.js \
             -o www/qr-scanner.legacy.min.js
-          curl -fsSL https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js \
+
+          curl -fsSL \
+            https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js \
             -o www/qrcode.min.js
+
           python3 tools/prepare_native.py
 
-      - name: Add iOS platform
+      - name: Add iOS
         run: npx cap add ios
 
       - name: Add camera permission
@@ -45,10 +50,10 @@ jobs:
           PLIST="ios/App/App/Info.plist"
 
           /usr/libexec/PlistBuddy \
-            -c "Add :NSCameraUsageDescription string This app uses the camera to scan student QR codes." \
+            -c "Add :NSCameraUsageDescription string يستخدم التطبيق الكاميرا لمسح QR للطلاب." \
             "$PLIST" 2>/dev/null || \
           /usr/libexec/PlistBuddy \
-            -c "Set :NSCameraUsageDescription This app uses the camera to scan student QR codes." \
+            -c "Set :NSCameraUsageDescription يستخدم التطبيق الكاميرا لمسح QR للطلاب." \
             "$PLIST"
 
       - name: Sync Capacitor
@@ -70,17 +75,31 @@ jobs:
       - name: Create IPA
         run: |
           rm -rf Payload Attendance.ipa
+
           mkdir Payload
-          cp -R build/Build/Products/Release-iphoneos/App.app Payload/App.app
+
+          cp -R \
+            build/Build/Products/Release-iphoneos/App.app \
+            Payload/App.app
+
           zip -qry Attendance.ipa Payload
+
+          ls -lh Attendance.ipa
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dar-alhafez-ios-ipa
+          path: Attendance.ipa
+          if-no-files-found: error
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="ios-build-${{ github.run_number }}"
+          TAG="dar-alhafez-ios-${{ github.run_number }}"
 
           gh release create "$TAG" \
             Attendance.ipa \
-            --title "Attendance iOS Build ${{ github.run_number }}" \
-            --notes "Unsigned IPA build generated automatically by GitHub Actions."
+            --title "دار الحافظ iOS ${{ github.run_number }}" \
+            --notes "Unsigned IPA build for Dar Alhafez."
