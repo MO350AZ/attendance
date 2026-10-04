@@ -1,0 +1,73 @@
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Capacitor
+        run: npm install
+
+      - name: Prepare packaged web app
+        run: |
+          mkdir -p www
+          curl -fsSL https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.legacy.min.js -o www/qr-scanner.legacy.min.js
+          curl -fsSL https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js -o www/qrcode.min.js
+          python3 tools/prepare_native.py
+
+      - name: Add iOS platform
+        run: npx cap add ios
+
+      - name: Add camera usage description
+        run: |
+          PLIST="ios/App/App/Info.plist"
+
+          /usr/libexec/PlistBuddy \
+            -c "Add :NSCameraUsageDescription string This app uses the camera to scan student QR codes." \
+            "$PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy \
+            -c "Set :NSCameraUsageDescription This app uses the camera to scan student QR codes." \
+            "$PLIST"
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
+
+      - name: Build unsigned iOS app
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Package IPA
+        run: |
+          rm -rf Payload Attendance.ipa
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/App.app Payload/App.app
+          zip -qry Attendance.ipa Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: attendance-ios-ipa
+          path: Attendance.ipa
+          if-no-files-found: error
