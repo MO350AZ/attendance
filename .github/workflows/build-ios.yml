@@ -2,8 +2,9 @@ name: Build iOS IPA
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -18,20 +19,28 @@ jobs:
         with:
           node-version: 24
 
-      - name: Install Capacitor
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install dependencies
         run: npm install
 
       - name: Prepare packaged web app
         run: |
           mkdir -p www
-          curl -fsSL https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.legacy.min.js -o www/qr-scanner.legacy.min.js
-          curl -fsSL https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js -o www/qrcode.min.js
+          curl -fsSL https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.legacy.min.js \
+            -o www/qr-scanner.legacy.min.js
+          curl -fsSL https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js \
+            -o www/qrcode.min.js
           python3 tools/prepare_native.py
 
       - name: Add iOS platform
         run: npx cap add ios
 
-      - name: Add camera usage description
+      - name: Add camera permission
         run: |
           PLIST="ios/App/App/Info.plist"
 
@@ -58,16 +67,20 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             build
 
-      - name: Package IPA
+      - name: Create IPA
         run: |
           rm -rf Payload Attendance.ipa
           mkdir Payload
           cp -R build/Build/Products/Release-iphoneos/App.app Payload/App.app
           zip -qry Attendance.ipa Payload
 
-      - name: Upload IPA
-        uses: actions/upload-artifact@v4
-        with:
-          name: attendance-ios-ipa
-          path: Attendance.ipa
-          if-no-files-found: error
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="ios-build-${{ github.run_number }}"
+
+          gh release create "$TAG" \
+            Attendance.ipa \
+            --title "Attendance iOS Build ${{ github.run_number }}" \
+            --notes "Unsigned IPA build generated automatically by GitHub Actions."
