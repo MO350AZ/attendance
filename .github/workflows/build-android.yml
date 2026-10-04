@@ -1,0 +1,64 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Capacitor
+        run: npm install
+
+      - name: Prepare packaged web app
+        run: |
+          mkdir -p www
+          curl -fsSL https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.legacy.min.js -o www/qr-scanner.legacy.min.js
+          curl -fsSL https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js -o www/qrcode.min.js
+          python3 tools/prepare_native.py
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Add camera permission
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+
+          if "android.permission.CAMERA" not in s:
+              s = s.replace(
+                  "<application",
+                  '    <uses-permission android:name="android.permission.CAMERA" />\n    <application',
+                  1
+              )
+
+          p.write_text(s)
+          PY
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: attendance-android-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
