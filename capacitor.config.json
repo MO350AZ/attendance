@@ -1,0 +1,6 @@
+{
+  "appId": "com.moaaz.attendance",
+  "appName": "حضور وحفظ",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
