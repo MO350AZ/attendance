@@ -56,6 +56,7 @@ function setupSpreadsheet() {
   migrateOldSheet_(ss, OLD_SHEETS.DASHBOARD, SHEETS.DASHBOARD);
   migrateOldSheet_(ss, OLD_SHEETS.DETAIL, SHEETS.DETAIL);
   migrateOldSheet_(ss, OLD_SHEETS.PAYMENTS, SHEETS.PAYMENTS);
+  migrateStudentsSchema_(ss);
 
   ensureSheet_(ss, SHEETS.STUDENTS, STUDENT_HEADERS);
   ensureSheet_(ss, SHEETS.RECORDS, RECORD_HEADERS);
@@ -83,6 +84,82 @@ function ensureSheet_(ss, name, headers) {
   if (!sh) sh = ss.insertSheet(name);
   sh.getRange(1,1,1,headers.length).setValues([headers]);
   return sh;
+}
+
+// ترحيل آمن لجدول الطلاب القديم إلى الشكل الجديد.
+// مهم: لا يعتمد على ترتيب الأعمدة؛ يعتمد على أسماء العناوين،
+// لذلك لا تتحرك بيانات المجموعة/الهاتف/آخر تحديث إلى أعمدة خاطئة.
+function migrateStudentsSchema_(ss) {
+  const sh = ss.getSheetByName(SHEETS.STUDENTS);
+  if (!sh || sh.getLastRow() < 1) return;
+
+  const lastCol = Math.max(sh.getLastColumn(), 1);
+  const headers = sh.getRange(1,1,1,lastCol).getDisplayValues()[0].map(String);
+  const normalized = headers.map(h => h.trim());
+
+  // إذا كان الجدول بالفعل بالشكل الجديد، لا نعيد كتابة البيانات.
+  const hasNew = STUDENT_HEADERS.every(h => normalized.indexOf(h) !== -1);
+  if (hasNew) {
+    // إصلاح خاص للحالة التي حصلت بالفعل: تم استبدال العناوين قبل الترحيل،
+    // فأصبحت C=المجموعة وD=الهاتف وE=آخر تحديث تحت عناوين جديدة.
+    const rowCount = sh.getLastRow() - 1;
+    if (rowCount > 0) {
+      const rows = sh.getRange(2,1,rowCount,Math.max(lastCol,7)).getValues();
+      let looksShifted = false;
+      for (let i=0; i<Math.min(rows.length,50); i++) {
+        const r = rows[i];
+        if (!r[0] && !r[1] && !r[2] && !r[3] && !r[4] && !r[5] && !r[6]) continue;
+        const c = String(r[2] == null ? '' : r[2]).trim();
+        const d = String(r[3] == null ? '' : r[3]).trim();
+        const e = String(r[4] == null ? '' : r[4]).trim();
+        const f = String(r[5] == null ? '' : r[5]).trim();
+        const g = String(r[6] == null ? '' : r[6]).trim();
+        const timestamp = e instanceof Date || /^\d{4}-\d{2}-\d{2}T/.test(e);
+        if (timestamp && !g && !f) { looksShifted = true; break; }
+      }
+      if (looksShifted) {
+        const fixed = rows.map(r => [
+          r[0], r[1], '', r[2] || '', r[3] || '', '', r[4] || ''
+        ]);
+        sh.getRange(2,1,fixed.length,7).setValues(fixed);
+      }
+    }
+    return;
+  }
+
+  // الشكل القديم المتوقع: المعرف، الاسم، المجموعة، الهاتف، آخر تحديث
+  const oldIndex = {};
+  normalized.forEach((h,i) => { oldIndex[h] = i; });
+  const aliases = {
+    id: ['المعرف','ID','Id','id'],
+    name: ['الاسم','Name','name'],
+    age: ['العمر','Age','age'],
+    group: ['المجموعة','Group','group'],
+    phone: ['الهاتف','Phone','phone'],
+    guardian: ['هاتف ولي الأمر','رقم ولي الأمر','Guardian Phone','Parent Phone','guardianPhone','parentPhone'],
+    updated: ['آخر تحديث','Updated At','updatedAt','Last Updated']
+  };
+  const findIndex = keys => {
+    for (const k of keys) { const i = oldIndex[k]; if (i !== undefined) return i; }
+    return -1;
+  };
+  const idx = {
+    id: findIndex(aliases.id), name: findIndex(aliases.name), age: findIndex(aliases.age),
+    group: findIndex(aliases.group), phone: findIndex(aliases.phone),
+    guardian: findIndex(aliases.guardian), updated: findIndex(aliases.updated)
+  };
+
+  const rowCount = sh.getLastRow() - 1;
+  const rows = rowCount > 0 ? sh.getRange(2,1,rowCount,lastCol).getValues() : [];
+  const valueAt = (row,i) => i >= 0 ? row[i] : '';
+  const migrated = rows.map(row => [
+    valueAt(row,idx.id), valueAt(row,idx.name), valueAt(row,idx.age),
+    valueAt(row,idx.group), valueAt(row,idx.phone), valueAt(row,idx.guardian), valueAt(row,idx.updated)
+  ]);
+
+  // نكتب البيانات المترحلة أولًا، ثم العناوين.
+  if (migrated.length) sh.getRange(2,1,migrated.length,7).setValues(migrated);
+  sh.getRange(1,1,1,7).setValues([STUDENT_HEADERS]);
 }
 
 function sync_(payload) {
