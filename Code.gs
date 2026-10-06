@@ -12,7 +12,7 @@ const SHEETS = {
 const OLD_SHEETS = {
   STUDENTS: 'Students', RECORDS: 'Records', CONFIG: 'Config', DASHBOARD: 'Dashboard', DETAIL: 'Student Details'
 };
-const STUDENT_HEADERS = ['المعرف','الاسم','المجموعة','الهاتف','آخر تحديث'];
+const STUDENT_HEADERS = ['المعرف','الاسم','العمر','المجموعة','الهاتف','هاتف ولي الأمر','آخر تحديث'];
 const RECORD_HEADERS = ['معرف السجل','التاريخ','معرف الطالب','الحالة','الحفظ','آخر تحديث'];
 const CONFIG_HEADERS = ['المفتاح','القيمة'];
 const PAYMENT_HEADERS = ['معرف الدفعة','التاريخ','الفترة','النوع','الطلاب','المبلغ الإجمالي','المجموعة','ملاحظات','آخر تحديث'];
@@ -105,11 +105,11 @@ function sync_(payload) {
     students.forEach(s => {
       if (!s || !s.id || !s.updatedAt) return;
       const row = studentMap[String(s.id)];
-      const values = [String(s.id), String(s.name || ''), String(s.group || ''), String(s.phone || ''), String(s.updatedAt)];
+      const values = [String(s.id), String(s.name || ''), s.age == null || s.age === '' ? '' : Number(s.age), String(s.group || ''), String(s.phone || ''), String(s.guardianPhone || s.parentPhone || ''), String(s.updatedAt)];
       if (row) {
-        const old = studentSheet.getRange(row,1,1,5).getValues()[0];
-        if (String(old[4] || '') < String(s.updatedAt)) {
-          studentSheet.getRange(row,1,1,5).setValues([values]); studentsChanged++;
+        const old = studentSheet.getRange(row,1,1,7).getValues()[0];
+        if (String(old[6] || '') < String(s.updatedAt)) {
+          studentSheet.getRange(row,1,1,7).setValues([values]); studentsChanged++;
         }
       } else {
         studentSheet.appendRow(values); studentsChanged++;
@@ -187,7 +187,7 @@ function pull_(since) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const students = rowsToObjects_(ss.getSheetByName(SHEETS.STUDENTS), STUDENT_HEADERS)
     .filter(x => !since || String(x['آخر تحديث']) > String(since))
-    .map(x => ({id:String(x['المعرف']),name:String(x['الاسم']||''),group:String(x['المجموعة']||''),phone:String(x['الهاتف']||''),updatedAt:String(x['آخر تحديث']||'')}));
+    .map(x => ({id:String(x['المعرف']),name:String(x['الاسم']||''),age:x['العمر']===''||x['العمر']==null?'':Number(x['العمر']),group:String(x['المجموعة']||''),phone:String(x['الهاتف']||''),guardianPhone:String(x['هاتف ولي الأمر']||''),updatedAt:String(x['آخر تحديث']||'')}));
   const records = rowsToObjects_(ss.getSheetByName(SHEETS.RECORDS), RECORD_HEADERS)
     .filter(x => !since || String(x['آخر تحديث']) > String(since))
     .map(x => ({id:String(x['معرف السجل']),date:String(x['التاريخ']),studentId:String(x['معرف الطالب']),status:String(x['الحالة']||'') === 'غائب' ? 'absent' : 'present',memory:x['الحفظ']===''||x['الحفظ']==null?null:Number(x['الحفظ']),updatedAt:String(x['آخر تحديث']||'')}));
