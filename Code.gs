@@ -23,6 +23,7 @@ function doGet(e) {
     if (action === 'ping') return json_({success:true, serverTime:new Date().toISOString()}, e.parameter.callback);
     if (action === 'sync') return json_(sync_(decodePayload_(e.parameter.payload || '')), e.parameter.callback);
     if (action === 'pull') return json_(pull_(e.parameter.since || ''), e.parameter.callback);
+    if (action === 'fullPull') return json_(pull_(''), e.parameter.callback);
     if (action === 'clearRecords') return json_(clearRecords_(), e.parameter.callback);
     if (action === 'clearAll') return json_(clearAll_(), e.parameter.callback);
     return json_({success:false,message:'إجراء غير معروف'}, e.parameter.callback);
@@ -39,6 +40,7 @@ function doPost(e) {
     if (action === 'ping') result = {success:true,serverTime:new Date().toISOString()};
     else if (action === 'sync') result = sync_(body.payload || {});
     else if (action === 'pull') result = pull_(body.since || '');
+    else if (action === 'fullPull') result = pull_('');
     else if (action === 'clearRecords') result = clearRecords_();
     else if (action === 'clearAll') result = clearAll_();
     else result = {success:false,message:'إجراء غير معروف'};
