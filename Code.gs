@@ -113,11 +113,13 @@ function migrateStudentsSchema_(ss) {
         if (!r[0] && !r[1] && !r[2] && !r[3] && !r[4] && !r[5] && !r[6]) continue;
         const c = String(r[2] == null ? '' : r[2]).trim();
         const d = String(r[3] == null ? '' : r[3]).trim();
-        const e = String(r[4] == null ? '' : r[4]).trim();
+        const e = r[4];
         const f = String(r[5] == null ? '' : r[5]).trim();
-        const g = String(r[6] == null ? '' : r[6]).trim();
-        const timestamp = e instanceof Date || /^\d{4}-\d{2}-\d{2}T/.test(e);
-        if (timestamp && !g && !f) { looksShifted = true; break; }
+        const g = r[6];
+        const timestamp = e instanceof Date || /^\d{4}-\d{2}-\d{2}T/.test(String(e)) || /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}/.test(String(e));
+        const looksLikePhone = /^0?1[0125]\d{8}$/.test(String(d).replace(/[ +()-]/g,''));
+        const looksLikeGroup = c.length > 0 && !/^\d+(?:\.\d+)?$/.test(c);
+        if ((timestamp && !f && !g) || (looksLikeGroup && looksLikePhone && timestamp)) { looksShifted = true; break; }
       }
       if (looksShifted) {
         const fixed = rows.map(r => [
@@ -212,9 +214,16 @@ function sync_(payload) {
 
 
     payments.forEach(p => {
-      if (!p || !p.id || !p.updatedAt || !Array.isArray(p.studentIds) || !p.studentIds.length) return;
+      if (!p || !p.id || !p.updatedAt) return;
+      const studentIds = Array.isArray(p.studentIds) && p.studentIds.length
+        ? p.studentIds.map(String)
+        : (p.studentId ? [String(p.studentId)] : []);
+      if (!studentIds.length) return;
+      const type = p.type === 'shared' || studentIds.length > 1 ? 'shared' : 'single';
+      const totalAmount = p.totalAmount != null && p.totalAmount !== '' ? Number(p.totalAmount) : Number(p.amount || 0);
+      const notes = p.notes != null ? String(p.notes) : String(p.note || '');
       const row = paymentMap[String(p.id)];
-      const values = [String(p.id), String(p.date||''), String(p.period||''), String(p.type||'single'), p.studentIds.map(String).join(','), Number(p.totalAmount||0), String(p.group||''), String(p.notes||''), String(p.updatedAt)];
+      const values = [String(p.id), String(p.date||''), String(p.period||''), type, studentIds.join(','), Number.isFinite(totalAmount) ? totalAmount : 0, String(p.group||''), notes, String(p.updatedAt)];
       if (row) {
         const old = paymentSheet.getRange(row,1,1,9).getValues()[0];
         if (String(old[8] || '') < String(p.updatedAt)) { paymentSheet.getRange(row,1,1,9).setValues([values]); paymentsChanged++; }
