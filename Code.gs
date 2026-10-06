@@ -96,74 +96,66 @@ function migrateStudentsSchema_(ss) {
   if (!sh || sh.getLastRow() < 1) return;
 
   const lastCol = Math.max(sh.getLastColumn(), 1);
-  const headers = sh.getRange(1,1,1,lastCol).getDisplayValues()[0].map(String);
-  const normalized = headers.map(h => h.trim());
+  const headers = sh.getRange(1,1,1,lastCol).getDisplayValues()[0].map(x => String(x || '').trim());
+  const rowCount = Math.max(0, sh.getLastRow() - 1);
+  const rows = rowCount ? sh.getRange(2,1,rowCount,lastCol).getValues() : [];
+  const isTimestamp = v => {
+    if (v instanceof Date && !isNaN(v.getTime())) return true;
+    const s = String(v == null ? '' : v).trim();
+    return /^\d{4}-\d{2}-\d{2}T/.test(s) || /^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}/.test(s) || /^\w{3} \w{3} \d{1,2} \d{4}/.test(s);
+  };
+  const looksPhone = v => /^0?1[0125]\d{8}$/.test(String(v == null ? '' : v).replace(/[ +()-]/g,''));
 
-  // إذا كان الجدول بالفعل بالشكل الجديد، لا نعيد كتابة البيانات.
-  const hasNew = STUDENT_HEADERS.every(h => normalized.indexOf(h) !== -1);
-  if (hasNew) {
-    // إصلاح خاص للحالة التي حصلت بالفعل: تم استبدال العناوين قبل الترحيل،
-    // فأصبحت C=المجموعة وD=الهاتف وE=آخر تحديث تحت عناوين جديدة.
-    const rowCount = sh.getLastRow() - 1;
-    if (rowCount > 0) {
-      const rows = sh.getRange(2,1,rowCount,Math.max(lastCol,7)).getValues();
-      let looksShifted = false;
-      for (let i=0; i<Math.min(rows.length,50); i++) {
-        const r = rows[i];
-        if (!r[0] && !r[1] && !r[2] && !r[3] && !r[4] && !r[5] && !r[6]) continue;
-        const c = String(r[2] == null ? '' : r[2]).trim();
-        const d = String(r[3] == null ? '' : r[3]).trim();
-        const e = r[4];
-        const f = String(r[5] == null ? '' : r[5]).trim();
-        const g = r[6];
-        const timestamp = e instanceof Date || /^\d{4}-\d{2}-\d{2}T/.test(String(e)) || /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}/.test(String(e));
-        const looksLikePhone = /^0?1[0125]\d{8}$/.test(String(d).replace(/[ +()-]/g,''));
-        const looksLikeGroup = c.length > 0 && !/^\d+(?:\.\d+)?$/.test(c);
-        if ((timestamp && !f && !g) || (looksLikeGroup && looksLikePhone && timestamp)) { looksShifted = true; break; }
-      }
-      if (looksShifted) {
-        const fixed = rows.map(r => [
-          r[0], r[1], '', r[2] || '', r[3] || '', '', r[4] || ''
-        ]);
-        sh.getRange(2,1,fixed.length,7).setValues(fixed);
-      }
-    }
+  // إصلاح النسخة التي ظهرت فيها المجموعة داخل عمود الهاتف/آخر تحديث.
+  // الشكل المتضرر: A=ID, B=الاسم, C=المجموعة(فارغة), D=الهاتف(فارغ), E=آخر تحديث لكن القيمة مجموعة.
+  const hasExpectedNewHeaders = STUDENT_HEADERS.every(h => headers.indexOf(h) !== -1);
+  const ageMissing = headers.indexOf('العمر') === -1;
+  const duplicateUpdated = headers.filter(h => h === 'آخر تحديث').length >= 2;
+  let corrupted = false;
+  if (ageMissing && duplicateUpdated && rowCount) {
+    corrupted = rows.slice(0, Math.min(100, rows.length)).some(r => {
+      const c = String(r[2] == null ? '' : r[2]).trim();
+      const d = String(r[3] == null ? '' : r[3]).trim();
+      const e = r[4];
+      const f = String(r[5] == null ? '' : r[5]).trim();
+      const g = r[6];
+      return !c && !f && !g && String(e || '').trim() !== '' && !isTimestamp(e) && (!d || looksPhone(d));
+    });
+  }
+
+  if (corrupted) {
+    const fixed = rows.map(r => {
+      const e = r[4];
+      const d = r[3];
+      const group = String(r[2] || '').trim() || (!isTimestamp(e) ? String(e || '').trim() : '');
+      const phone = looksPhone(d) ? String(d).trim() : '';
+      const updated = isTimestamp(r[6]) ? normalizeTimestamp_(r[6]) : (isTimestamp(e) ? normalizeTimestamp_(e) : new Date().toISOString());
+      return [r[0], r[1], '', group, phone, String(r[5] || ''), updated];
+    });
+    sh.getRange(1,1,1,7).setValues([STUDENT_HEADERS]);
+    if (fixed.length) sh.getRange(2,1,fixed.length,7).setValues(fixed);
     return;
   }
 
-  // الشكل القديم المتوقع: المعرف، الاسم، المجموعة، الهاتف، آخر تحديث
+  // إذا كان الشكل الجديد كاملًا، لا نعيد ترتيب البيانات.
+  if (hasExpectedNewHeaders) return;
+
+  // الشكل القديم: المعرف، الاسم، المجموعة، الهاتف، آخر تحديث (+ أعمدة اختيارية).
+  const normalized = headers;
   const oldIndex = {};
-  normalized.forEach((h,i) => { oldIndex[h] = i; });
+  normalized.forEach((h,i) => { if (!(h in oldIndex)) oldIndex[h] = i; });
   const aliases = {
-    id: ['المعرف','ID','Id','id'],
-    name: ['الاسم','Name','name'],
-    age: ['العمر','Age','age'],
-    group: ['المجموعة','Group','group'],
-    phone: ['الهاتف','Phone','phone'],
+    id: ['المعرف','ID','Id','id'], name: ['الاسم','Name','name'], age: ['العمر','Age','age'],
+    group: ['المجموعة','Group','group'], phone: ['الهاتف','Phone','phone'],
     guardian: ['هاتف ولي الأمر','رقم ولي الأمر','Guardian Phone','Parent Phone','guardianPhone','parentPhone'],
     updated: ['آخر تحديث','Updated At','updatedAt','Last Updated']
   };
-  const findIndex = keys => {
-    for (const k of keys) { const i = oldIndex[k]; if (i !== undefined) return i; }
-    return -1;
-  };
-  const idx = {
-    id: findIndex(aliases.id), name: findIndex(aliases.name), age: findIndex(aliases.age),
-    group: findIndex(aliases.group), phone: findIndex(aliases.phone),
-    guardian: findIndex(aliases.guardian), updated: findIndex(aliases.updated)
-  };
-
-  const rowCount = sh.getLastRow() - 1;
-  const rows = rowCount > 0 ? sh.getRange(2,1,rowCount,lastCol).getValues() : [];
+  const findIndex = keys => { for (const k of keys) if (oldIndex[k] !== undefined) return oldIndex[k]; return -1; };
+  const idx = {id:findIndex(aliases.id),name:findIndex(aliases.name),age:findIndex(aliases.age),group:findIndex(aliases.group),phone:findIndex(aliases.phone),guardian:findIndex(aliases.guardian),updated:findIndex(aliases.updated)};
   const valueAt = (row,i) => i >= 0 ? row[i] : '';
-  const migrated = rows.map(row => [
-    valueAt(row,idx.id), valueAt(row,idx.name), valueAt(row,idx.age),
-    valueAt(row,idx.group), valueAt(row,idx.phone), valueAt(row,idx.guardian), valueAt(row,idx.updated)
-  ]);
-
-  // نكتب البيانات المترحلة أولًا، ثم العناوين.
-  if (migrated.length) sh.getRange(2,1,migrated.length,7).setValues(migrated);
+  const migrated = rows.map(row => [valueAt(row,idx.id),valueAt(row,idx.name),valueAt(row,idx.age),valueAt(row,idx.group),valueAt(row,idx.phone),valueAt(row,idx.guardian),valueAt(row,idx.updated)]);
   sh.getRange(1,1,1,7).setValues([STUDENT_HEADERS]);
+  if (migrated.length) sh.getRange(2,1,migrated.length,7).setValues(migrated);
 }
 
 function sync_(payload) {
@@ -270,18 +262,42 @@ function clearAll_() {
   } finally { lock.releaseLock(); }
 }
 
+function normalizeDate_(v) {
+  if (v instanceof Date && !isNaN(v.getTime())) {
+    const tz = Session.getScriptTimeZone() || 'Africa/Cairo';
+    return Utilities.formatDate(v, tz, 'yyyy-MM-dd');
+  }
+  const s = String(v == null ? '' : v).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  if (!s) return '';
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    const tz = Session.getScriptTimeZone() || 'Africa/Cairo';
+    return Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+  }
+  return s;
+}
+
+function normalizeTimestamp_(v) {
+  if (v instanceof Date && !isNaN(v.getTime())) return v.toISOString();
+  const s = String(v == null ? '' : v).trim();
+  if (!s) return '';
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? s : d.toISOString();
+}
+
 function pull_(since) {
   setupSpreadsheet();
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const students = rowsToObjects_(ss.getSheetByName(SHEETS.STUDENTS), STUDENT_HEADERS)
-    .filter(x => !since || String(x['آخر تحديث']) > String(since))
-    .map(x => ({id:String(x['المعرف']),name:String(x['الاسم']||''),age:x['العمر']===''||x['العمر']==null?'':Number(x['العمر']),group:String(x['المجموعة']||''),phone:String(x['الهاتف']||''),guardianPhone:String(x['هاتف ولي الأمر']||''),updatedAt:String(x['آخر تحديث']||'')}));
+    .filter(x => !since || normalizeTimestamp_(x['آخر تحديث']) > String(since))
+    .map(x => ({id:String(x['المعرف']),name:String(x['الاسم']||''),age:x['العمر']===''||x['العمر']==null?'':Number(x['العمر']),group:String(x['المجموعة']||''),phone:String(x['الهاتف']||''),guardianPhone:String(x['هاتف ولي الأمر']||''),updatedAt:normalizeTimestamp_(x['آخر تحديث'])}));
   const records = rowsToObjects_(ss.getSheetByName(SHEETS.RECORDS), RECORD_HEADERS)
-    .filter(x => !since || String(x['آخر تحديث']) > String(since))
-    .map(x => ({id:String(x['معرف السجل']),date:String(x['التاريخ']),studentId:String(x['معرف الطالب']),status:String(x['الحالة']||'') === 'غائب' ? 'absent' : 'present',memory:x['الحفظ']===''||x['الحفظ']==null?null:Number(x['الحفظ']),updatedAt:String(x['آخر تحديث']||'')}));
+    .filter(x => !since || normalizeTimestamp_(x['آخر تحديث']) > String(since))
+    .map(x => ({id:String(x['معرف السجل']),date:normalizeDate_(x['التاريخ']),studentId:String(x['معرف الطالب']),status:String(x['الحالة']||'') === 'غائب' ? 'absent' : 'present',memory:x['الحفظ']===''||x['الحفظ']==null?null:Number(x['الحفظ']),updatedAt:normalizeTimestamp_(x['آخر تحديث'])}));
   const payments = rowsToObjects_(ss.getSheetByName(SHEETS.PAYMENTS), PAYMENT_HEADERS)
-    .filter(x => !since || String(x['آخر تحديث']) > String(since))
-    .map(x => ({id:String(x['معرف الدفعة']),date:String(x['التاريخ']||''),period:String(x['الفترة']||''),type:String(x['النوع']||'single'),studentIds:String(x['الطلاب']||'').split(',').map(v=>v.trim()).filter(Boolean),totalAmount:Number(x['المبلغ الإجمالي']||0),group:String(x['المجموعة']||''),notes:String(x['ملاحظات']||''),updatedAt:String(x['آخر تحديث']||'')}));
+    .filter(x => !since || normalizeTimestamp_(x['آخر تحديث']) > String(since))
+    .map(x => ({id:String(x['معرف الدفعة']),date:normalizeDate_(x['التاريخ']),period:String(x['الفترة']||''),type:String(x['النوع']||'single'),studentIds:String(x['الطلاب']||'').split(',').map(v=>v.trim()).filter(Boolean),totalAmount:Number(x['المبلغ الإجمالي']||0),group:String(x['المجموعة']||''),notes:String(x['ملاحظات']||''),updatedAt:normalizeTimestamp_(x['آخر تحديث'])}));
   return {success:true,students,records,payments,serverTime:new Date().toISOString()};
 }
 

@@ -12,3 +12,11 @@ On iOS 26/27, Safari can add any site to the Home Screen as a web app; the manif
 
 
 V19.5: added explicit iOS apple-touch-icon-precomposed and additional iOS icon sizes; cache v22.
+
+## إصدار 2.2.0 — إصلاحات المزامنة والـPWA
+- إصلاح ترحيل جدول الطلاب عندما تكون المجموعة ظهرت داخل عمود الهاتف/آخر تحديث.
+- توحيد أنواع IDs بين الطلاب والسجلات.
+- توحيد تواريخ السجلات القادمة من Google Sheets إلى `YYYY-MM-DD` حتى تظهر الإحصائيات.
+- تعبئة مجموعات صفحة المدفوعات عند فتحها/تحديثها.
+- Service Worker يستخدم Network-First لملفات التطبيق حتى لا يظل الإصدار القديم عالقًا في الكاش.
+- تحديث الإصدار إلى 2.2.0.
