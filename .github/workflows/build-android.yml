@@ -3,6 +3,8 @@ name: Build Android APK
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -61,9 +63,24 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
-      - name: Upload APK
+      - name: Rename APK
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk Dar-Alhafez.apk
+
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: attendance-android-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: dar-alhafez-android-apk
+          path: Dar-Alhafez.apk
           if-no-files-found: error
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="dar-alhafez-android-${{ github.run_number }}"
+
+          gh release create "$TAG" \
+            Dar-Alhafez.apk \
+            --title "دار الحافظ Android ${{ github.run_number }}" \
+            --notes "دار الحافظ Android APK - Build ${{ github.run_number }}"
