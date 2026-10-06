@@ -4,18 +4,18 @@
 const SHEETS = {
   STUDENTS: 'الطلاب',
   RECORDS: 'السجلات',
-  PAYMENTS: 'المدفوعات',
   CONFIG: 'الإعدادات',
   DASHBOARD: 'لوحة التحكم',
-  DETAIL: 'تفاصيل الطالب'
+  DETAIL: 'تفاصيل الطالب',
+  PAYMENTS: 'الدفعات'
 };
 const OLD_SHEETS = {
-  STUDENTS: 'Students', RECORDS: 'Records', PAYMENTS: 'Payments', CONFIG: 'Config', DASHBOARD: 'Dashboard', DETAIL: 'Student Details'
+  STUDENTS: 'Students', RECORDS: 'Records', CONFIG: 'Config', DASHBOARD: 'Dashboard', DETAIL: 'Student Details'
 };
-const STUDENT_HEADERS = ['المعرف','الاسم','السن','المجموعة','الهاتف','هاتف ولي الأمر','آخر تحديث'];
-const PAYMENT_HEADERS = ['معرف الدفع','التاريخ','معرف الطالب','المبلغ','الفترة','ملاحظات','آخر تحديث'];
+const STUDENT_HEADERS = ['المعرف','الاسم','المجموعة','الهاتف','آخر تحديث'];
 const RECORD_HEADERS = ['معرف السجل','التاريخ','معرف الطالب','الحالة','الحفظ','آخر تحديث'];
 const CONFIG_HEADERS = ['المفتاح','القيمة'];
+const PAYMENT_HEADERS = ['معرف الدفعة','التاريخ','الفترة','النوع','الطلاب','المبلغ الإجمالي','المجموعة','ملاحظات','آخر تحديث'];
 
 function doGet(e) {
   try {
@@ -52,15 +52,15 @@ function setupSpreadsheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   migrateOldSheet_(ss, OLD_SHEETS.STUDENTS, SHEETS.STUDENTS);
   migrateOldSheet_(ss, OLD_SHEETS.RECORDS, SHEETS.RECORDS);
-  migrateOldSheet_(ss, OLD_SHEETS.PAYMENTS, SHEETS.PAYMENTS);
   migrateOldSheet_(ss, OLD_SHEETS.CONFIG, SHEETS.CONFIG);
   migrateOldSheet_(ss, OLD_SHEETS.DASHBOARD, SHEETS.DASHBOARD);
   migrateOldSheet_(ss, OLD_SHEETS.DETAIL, SHEETS.DETAIL);
+  migrateOldSheet_(ss, OLD_SHEETS.PAYMENTS, SHEETS.PAYMENTS);
 
   ensureSheet_(ss, SHEETS.STUDENTS, STUDENT_HEADERS);
   ensureSheet_(ss, SHEETS.RECORDS, RECORD_HEADERS);
-  ensureSheet_(ss, SHEETS.PAYMENTS, PAYMENT_HEADERS);
   ensureSheet_(ss, SHEETS.CONFIG, CONFIG_HEADERS);
+  ensureSheet_(ss, SHEETS.PAYMENTS, PAYMENT_HEADERS);
   const config = ss.getSheetByName(SHEETS.CONFIG);
   if (config.getLastRow() < 2) config.getRange(2,1,1,2).setValues([['التطبيق','حضور وحفظ']]);
   config.hideSheet();
@@ -93,23 +93,23 @@ function sync_(payload) {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const studentSheet = ss.getSheetByName(SHEETS.STUDENTS);
     const recordSheet = ss.getSheetByName(SHEETS.RECORDS);
+    const paymentSheet = ss.getSheetByName(SHEETS.PAYMENTS);
     const students = Array.isArray(payload.students) ? payload.students : [];
     const records = Array.isArray(payload.records) ? payload.records : [];
-    const payments = Array.isArray(payload.payments) ? payload.payments : [];
-    const paymentSheet = ss.getSheetByName(SHEETS.PAYMENTS);
-    const paymentMap = readMap_(paymentSheet, 1);
     const studentMap = readMap_(studentSheet, 1);
     const recordMap = readMap_(recordSheet, 1);
+    const paymentMap = readMap_(paymentSheet, 1);
+    const payments = Array.isArray(payload.payments) ? payload.payments : [];
     let studentsChanged = 0, recordsChanged = 0, paymentsChanged = 0;
 
     students.forEach(s => {
       if (!s || !s.id || !s.updatedAt) return;
       const row = studentMap[String(s.id)];
-      const values = [String(s.id), String(s.name || ''), s.age == null ? '' : Number(s.age), String(s.group || ''), String(s.phone || ''), String(s.guardianPhone || ''), String(s.updatedAt)];
+      const values = [String(s.id), String(s.name || ''), String(s.group || ''), String(s.phone || ''), String(s.updatedAt)];
       if (row) {
-        const old = studentSheet.getRange(row,1,1,7).getValues()[0];
-        if (String(old[6] || '') < String(s.updatedAt)) {
-          studentSheet.getRange(row,1,1,7).setValues([values]); studentsChanged++;
+        const old = studentSheet.getRange(row,1,1,5).getValues()[0];
+        if (String(old[4] || '') < String(s.updatedAt)) {
+          studentSheet.getRange(row,1,1,5).setValues([values]); studentsChanged++;
         }
       } else {
         studentSheet.appendRow(values); studentsChanged++;
@@ -131,16 +131,16 @@ function sync_(payload) {
       }
     });
 
+
     payments.forEach(p => {
-      if (!p || !p.id || !p.updatedAt || !p.studentId || !p.date) return;
+      if (!p || !p.id || !p.updatedAt || !Array.isArray(p.studentIds) || !p.studentIds.length) return;
       const row = paymentMap[String(p.id)];
-      const values = [String(p.id), String(p.date), String(p.studentId), p.amount == null ? '' : Number(p.amount), String(p.period || ''), String(p.note || ''), String(p.updatedAt)];
+      const values = [String(p.id), String(p.date||''), String(p.period||''), String(p.type||'single'), p.studentIds.map(String).join(','), Number(p.totalAmount||0), String(p.group||''), String(p.notes||''), String(p.updatedAt)];
       if (row) {
-        const old = paymentSheet.getRange(row,1,1,7).getValues()[0];
-        if (String(old[6] || '') < String(p.updatedAt)) { paymentSheet.getRange(row,1,1,7).setValues([values]); paymentsChanged++; }
+        const old = paymentSheet.getRange(row,1,1,9).getValues()[0];
+        if (String(old[8] || '') < String(p.updatedAt)) { paymentSheet.getRange(row,1,1,9).setValues([values]); paymentsChanged++; }
       } else { paymentSheet.appendRow(values); paymentsChanged++; }
     });
-
     rebuildDashboard_();
     return {success:true, studentsChanged, recordsChanged, paymentsChanged, serverTime:new Date().toISOString()};
   } finally { lock.releaseLock(); }
@@ -187,13 +187,13 @@ function pull_(since) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const students = rowsToObjects_(ss.getSheetByName(SHEETS.STUDENTS), STUDENT_HEADERS)
     .filter(x => !since || String(x['آخر تحديث']) > String(since))
-    .map(x => ({id:String(x['المعرف']),name:String(x['الاسم']||''),age:x['السن']===''||x['السن']==null?null:Number(x['السن']),group:String(x['المجموعة']||''),phone:String(x['الهاتف']||''),guardianPhone:String(x['هاتف ولي الأمر']||''),updatedAt:String(x['آخر تحديث']||'')}));
+    .map(x => ({id:String(x['المعرف']),name:String(x['الاسم']||''),group:String(x['المجموعة']||''),phone:String(x['الهاتف']||''),updatedAt:String(x['آخر تحديث']||'')}));
   const records = rowsToObjects_(ss.getSheetByName(SHEETS.RECORDS), RECORD_HEADERS)
     .filter(x => !since || String(x['آخر تحديث']) > String(since))
     .map(x => ({id:String(x['معرف السجل']),date:String(x['التاريخ']),studentId:String(x['معرف الطالب']),status:String(x['الحالة']||'') === 'غائب' ? 'absent' : 'present',memory:x['الحفظ']===''||x['الحفظ']==null?null:Number(x['الحفظ']),updatedAt:String(x['آخر تحديث']||'')}));
   const payments = rowsToObjects_(ss.getSheetByName(SHEETS.PAYMENTS), PAYMENT_HEADERS)
     .filter(x => !since || String(x['آخر تحديث']) > String(since))
-    .map(x => ({id:String(x['معرف الدفع']),date:String(x['التاريخ']),studentId:String(x['معرف الطالب']),amount:x['المبلغ']===''||x['المبلغ']==null?0:Number(x['المبلغ']),period:String(x['الفترة']||''),note:String(x['ملاحظات']||''),updatedAt:String(x['آخر تحديث']||'')}));
+    .map(x => ({id:String(x['معرف الدفعة']),date:String(x['التاريخ']||''),period:String(x['الفترة']||''),type:String(x['النوع']||'single'),studentIds:String(x['الطلاب']||'').split(',').map(v=>v.trim()).filter(Boolean),totalAmount:Number(x['المبلغ الإجمالي']||0),group:String(x['المجموعة']||''),notes:String(x['ملاحظات']||''),updatedAt:String(x['آخر تحديث']||'')}));
   return {success:true,students,records,payments,serverTime:new Date().toISOString()};
 }
 
