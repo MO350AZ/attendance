@@ -1,4 +1,4 @@
-const CACHE='attendance-pwa-v26';
+const CACHE='attendance-pwa-v28';
 const CORE=['./','./index.html','./manifest.json','./version.json','./icon-512.png'];
 const EXTERNAL=['https://unpkg.com/qr-scanner@1.4.2/qr-scanner.legacy.min.js'];
 self.addEventListener('install',event=>event.waitUntil((async()=>{
