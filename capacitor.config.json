@@ -1,6 +1,5 @@
 {
   "appId": "com.moaaz.attendance",
   "appName": "دار الحافظ",
-  "webDir": "www",
-  "bundledWebRuntime": false
+  "webDir": "www"
 }

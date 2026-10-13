@@ -12,7 +12,7 @@ const SHEETS = {
 const OLD_SHEETS = {
   STUDENTS: 'Students', RECORDS: 'Records', CONFIG: 'Config', DASHBOARD: 'Dashboard', DETAIL: 'Student Details'
 };
-const STUDENT_HEADERS = ['المعرف','الاسم','العمر','المجموعة','الهاتف','هاتف ولي الأمر','آخر تحديث'];
+const STUDENT_HEADERS = ['المعرف','الاسم','العمر','المجموعة','الهاتف','هاتف ولي الأمر','آخر تحديث','الأيام'];
 const RECORD_HEADERS = ['معرف السجل','التاريخ','معرف الطالب','الحالة','الحفظ','آخر تحديث'];
 const CONFIG_HEADERS = ['المفتاح','القيمة'];
 const PAYMENT_HEADERS = ['معرف الدفعة','التاريخ','الفترة','النوع','الطلاب','المبلغ الإجمالي','المجموعة','ملاحظات','آخر تحديث'];
@@ -108,7 +108,7 @@ function migrateStudentsSchema_(ss) {
 
   // إصلاح النسخة التي ظهرت فيها المجموعة داخل عمود الهاتف/آخر تحديث.
   // الشكل المتضرر: A=ID, B=الاسم, C=المجموعة(فارغة), D=الهاتف(فارغ), E=آخر تحديث لكن القيمة مجموعة.
-  const hasExpectedNewHeaders = STUDENT_HEADERS.every(h => headers.indexOf(h) !== -1);
+  const hasExpectedNewHeaders = STUDENT_HEADERS.slice(0,7).every(h => headers.indexOf(h) !== -1);
   const ageMissing = headers.indexOf('العمر') === -1;
   const duplicateUpdated = headers.filter(h => h === 'آخر تحديث').length >= 2;
   let corrupted = false;
@@ -132,7 +132,7 @@ function migrateStudentsSchema_(ss) {
       const updated = isTimestamp(r[6]) ? normalizeTimestamp_(r[6]) : (isTimestamp(e) ? normalizeTimestamp_(e) : new Date().toISOString());
       return [r[0], r[1], '', group, phone, String(r[5] || ''), updated];
     });
-    sh.getRange(1,1,1,7).setValues([STUDENT_HEADERS]);
+    sh.getRange(1,1,1,7).setValues([STUDENT_HEADERS.slice(0,7)]);
     if (fixed.length) sh.getRange(2,1,fixed.length,7).setValues(fixed);
     return;
   }
@@ -154,7 +154,7 @@ function migrateStudentsSchema_(ss) {
   const idx = {id:findIndex(aliases.id),name:findIndex(aliases.name),age:findIndex(aliases.age),group:findIndex(aliases.group),phone:findIndex(aliases.phone),guardian:findIndex(aliases.guardian),updated:findIndex(aliases.updated)};
   const valueAt = (row,i) => i >= 0 ? row[i] : '';
   const migrated = rows.map(row => [valueAt(row,idx.id),valueAt(row,idx.name),valueAt(row,idx.age),valueAt(row,idx.group),valueAt(row,idx.phone),valueAt(row,idx.guardian),valueAt(row,idx.updated)]);
-  sh.getRange(1,1,1,7).setValues([STUDENT_HEADERS]);
+  sh.getRange(1,1,1,7).setValues([STUDENT_HEADERS.slice(0,7)]);
   if (migrated.length) sh.getRange(2,1,migrated.length,7).setValues(migrated);
 }
 
@@ -178,11 +178,11 @@ function sync_(payload) {
     students.forEach(s => {
       if (!s || !s.id || !s.updatedAt) return;
       const row = studentMap[String(s.id)];
-      const values = [String(s.id), String(s.name || ''), s.age == null || s.age === '' ? '' : Number(s.age), String(s.group || ''), String(s.phone || ''), String(s.guardianPhone || s.parentPhone || ''), String(s.updatedAt)];
+      const values = [String(s.id), String(s.name || ''), s.age == null || s.age === '' ? '' : Number(s.age), String(s.group || ''), String(s.phone || ''), String(s.guardianPhone || s.parentPhone || ''), String(s.updatedAt), JSON.stringify(Array.isArray(s.days) ? s.days.map(Number) : [])];
       if (row) {
-        const old = studentSheet.getRange(row,1,1,7).getValues()[0];
+        const old = studentSheet.getRange(row,1,1,8).getValues()[0];
         if (String(old[6] || '') < String(s.updatedAt)) {
-          studentSheet.getRange(row,1,1,7).setValues([values]); studentsChanged++;
+          studentSheet.getRange(row,1,1,8).setValues([values]); studentsChanged++;
         }
       } else {
         studentSheet.appendRow(values); studentsChanged++;
@@ -291,7 +291,7 @@ function pull_(since) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const students = rowsToObjects_(ss.getSheetByName(SHEETS.STUDENTS), STUDENT_HEADERS)
     .filter(x => !since || normalizeTimestamp_(x['آخر تحديث']) > String(since))
-    .map(x => ({id:String(x['المعرف']),name:String(x['الاسم']||''),age:x['العمر']===''||x['العمر']==null?'':Number(x['العمر']),group:String(x['المجموعة']||''),phone:String(x['الهاتف']||''),guardianPhone:String(x['هاتف ولي الأمر']||''),updatedAt:normalizeTimestamp_(x['آخر تحديث'])}));
+    .map(x => ({id:String(x['المعرف']),name:String(x['الاسم']||''),age:x['العمر']===''||x['العمر']==null?'':Number(x['العمر']),group:String(x['المجموعة']||''),phone:String(x['الهاتف']||''),guardianPhone:String(x['هاتف ولي الأمر']||''),updatedAt:normalizeTimestamp_(x['آخر تحديث']),days:(function(){try{const v=JSON.parse(String(x['الأيام']||'[]'));return Array.isArray(v)?v:[]}catch(e){return []}})()}));
   const records = rowsToObjects_(ss.getSheetByName(SHEETS.RECORDS), RECORD_HEADERS)
     .filter(x => !since || normalizeTimestamp_(x['آخر تحديث']) > String(since))
     .map(x => ({id:String(x['معرف السجل']),date:normalizeDate_(x['التاريخ']),studentId:String(x['معرف الطالب']),status:String(x['الحالة']||'') === 'غائب' ? 'absent' : 'present',memory:x['الحفظ']===''||x['الحفظ']==null?null:Number(x['الحفظ']),updatedAt:normalizeTimestamp_(x['آخر تحديث'])}));
