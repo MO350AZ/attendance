@@ -1,6 +1,6 @@
 {
   "name": "dar-alhafez",
-  "version": "2.3.2",
+  "version": "2.3.6",
   "private": true,
   "description": "دار الحافظ — Local-first attendance, memorization and payments PWA packaged with Capacitor",
   "scripts": {

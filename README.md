@@ -1,397 +1,274 @@
-# CRoC Project Attendance Tracker
+<div align="center">
 
-This tracker is designed so each project lead can set up attendance for their own project with:
+# 📚 دار الحافظ
 
-- one Google Sheet
-- one Google Apps Script web app bound to that sheet
-- one deployed copy of [`index.html`](/Users/ronniefellows-smith/dev/croc/project_attendance_tracker/index.html)
+### إدارة حلقات التحفيظ في مكان واحد
 
-The system uses a sign-in / sign-out event model:
+تطبيق عربي يساعد على تنظيم بيانات الطلاب، وتسجيل الحضور، ومتابعة الحفظ والمدفوعات، مع إمكانية الاحتفاظ بالبيانات محليًا ومزامنتها مع Google Sheets بعد الإعداد.
 
-- the frontend records scans locally first
-- the frontend keeps the current roster in browser storage so refreshes do not lose state
-- the frontend syncs events to Google Sheets in the background
-- the backend stores raw events in `Events`
-- the backend finalizes attendance from `Events` after a session has ended
-- the backend appends finalized rows into `Attendance` once per session/date
+<p>
+  <img src="https://img.shields.io/badge/Version-2.3.6-blue?style=for-the-badge" alt="Version 2.3.6">
+  <img src="https://img.shields.io/badge/Interface-Arabic-green?style=for-the-badge" alt="Arabic Interface">
+  <img src="https://img.shields.io/badge/Platform-PWA-purple?style=for-the-badge" alt="PWA">
+</p>
 
-## Quick Start
+</div>
 
-If you are setting this up for a new project, do these 8 things:
+---
 
-1. Create a Google Sheet for your project.
-2. Open Apps Script from that sheet and paste in [`Code.gs`](/Users/ronniefellows-smith/dev/croc/project_attendance_tracker/Code.gs).
-3. Run `setupSpreadsheet()`.
-4. Fill in the `Config` tab with your project name, password, and session times.
-5. Deploy the Apps Script as a web app.
-6. Open [`index.html`](/Users/ronniefellows-smith/dev/croc/project_attendance_tracker/index.html) and replace `YOUR_APPS_SCRIPT_WEB_APP_URL` with your own deployed Apps Script URL.
-7. Push the frontend to GitHub Pages or host it somewhere similar.
-8. Open the page, enter the password from your `Config` tab, and test one sign-in.
+## 📑 المحتويات
 
-If you only remember one thing:
+- [✨ المميزات](#-المميزات)
+- [🧰 التقنيات المستخدمة](#-التقنيات-المستخدمة)
+- [📁 محتويات المشروع](#-محتويات-المشروع)
+- [🚀 البدء](#-البدء)
+- [☁️ إعداد Google Sheets](#️-إعداد-google-sheets)
+- [📱 التثبيت والبناء](#-التثبيت-والبناء)
+- [💾 البيانات والنسخ الاحتياطي](#-البيانات-والنسخ-الاحتياطي)
+- [🔄 تحديث التطبيق](#-تحديث-التطبيق)
+- [🔐 الخصوصية والأمان](#-الخصوصية-والأمان)
+- [👨‍💻 المطوّر](#-المطوّر)
+- [© حقوق الاستخدام](#-حقوق-الاستخدام)
 
-- every project needs its own Google Sheet backend
-- every deployed frontend must point at that project’s own Apps Script `apiUrl`
+---
 
-## Files To Edit
+## ✨ المميزات
 
-- [`Code.gs`](/Users/ronniefellows-smith/dev/croc/project_attendance_tracker/Code.gs)
-  - paste this into Apps Script
-  - optionally edit backend `SETTINGS`
-- [`index.html`](/Users/ronniefellows-smith/dev/croc/project_attendance_tracker/index.html)
-  - set the Apps Script `apiUrl` to your own deployed backend
-  - deploy this through GitHub Pages
+### 👨‍🎓 إدارة الطلاب
+- تسجيل بيانات الطلاب الأساسية، مثل الاسم والسن والمجموعة.
+- إمكانية تسجيل رقم الهاتف ورقم وليّ الأمر.
+- البحث عن الطلاب والوصول إلى بياناتهم.
 
-## Supported IDs
+### 📋 الحضور ومتابعة الحفظ
+- تسجيل الحضور ومتابعة درجات الحفظ.
+- مراجعة السجلات والبحث والتصفية وفقًا للوظائف المتاحة داخل التطبيق.
 
-Manual entry accepts:
+### 🔳 رموز QR
+- إنشاء رمز QR لكل طالب لتسهيل الوصول إلى بياناته.
 
-- `12345678`
-- `123456A`
+### 💰 إدارة المدفوعات
+- تسجيل المبالغ والفترات والتواريخ والملاحظات المرتبطة بالمدفوعات.
 
-Barcode scans also accept a 3-character prefix:
+### 💾 تخزين البيانات
+- الاحتفاظ بالبيانات محليًا باستخدام IndexedDB.
+- إمكانية تصدير البيانات بصيغة JSON واستعادتها.
+- دعم المزامنة مع Google Sheets بعد إعداد Google Apps Script.
 
-- `xxx12345678`
-- `xxx123456A`
+### 🌐 تجربة الاستخدام
+- واجهة باللغة العربية.
+- دعم PWA لتثبيت التطبيق من متصفح متوافق عند استيفاء متطلبات الاستضافة.
+- إعدادات لمشروع Capacitor وبناء نسخ Android وiOS.
 
-The first 3 characters are ignored when present.
+---
 
-## Setup Overview
+## 🧰 التقنيات المستخدمة
 
-To set up a new project:
+| التقنية | الاستخدام |
+|---|---|
+| HTML | بناء واجهة التطبيق |
+| CSS | تنسيق الواجهة |
+| JavaScript | منطق التطبيق والتفاعلات |
+| IndexedDB | تخزين البيانات محليًا |
+| Progressive Web App (PWA) | دعم تجربة التطبيق القابل للتثبيت |
+| Service Worker | التخزين المؤقت وإدارة موارد الواجهة |
+| Google Apps Script | تنفيذ المزامنة مع Google Sheets |
+| Google Sheets | تخزين البيانات المتزامنة في جدول بيانات |
+| Capacitor | تجهيز تطبيقات الويب للتشغيل ضمن حاويات Android وiOS |
+| GitHub Actions | أتمتة عمليات البناء عند إعداد سير العمل |
 
-1. Create a new Google Sheet for that project.
-2. Add the backend code in Apps Script.
-3. Run `setupSpreadsheet()`.
-4. Fill in the `Config` tab.
-5. Deploy the Apps Script as a web app.
-6. Put that web app URL into [`index.html`](/Users/ronniefellows-smith/dev/croc/project_attendance_tracker/index.html).
-7. Push the frontend to GitHub Pages.
+---
 
-You can follow the detailed steps below if this is your first time doing it.
+## 📁 محتويات المشروع
 
-## 1. Create The Google Sheet
+| الملف أو المجلد | الوظيفة |
+|---|---|
+| `index.html` | واجهة التطبيق والمنطق الأساسي |
+| `Code.gs` | كود Google Apps Script الخاص بالمزامنة |
+| `manifest.json` | إعدادات تعريف تطبيق PWA |
+| `sw.js` | Service Worker والتخزين المؤقت |
+| `version.json` | معلومات الإصدار المستخدمة في آلية التحديث |
+| `icon-*.png` | أيقونات التطبيق |
+| `apple-touch-icon*.png` | أيقونات الإضافة إلى الشاشة الرئيسية على أجهزة Apple |
+| `capacitor.config.json` | إعدادات Capacitor |
+| `package.json` | تعريف المشروع واعتماديات وأوامر البناء المتاحة |
+| `tools/prepare_native.py` | أداة تجهيز ملفات الويب للبناء الأصلي |
+| `.github/workflows/` | ملفات سير عمل GitHub Actions |
+| `lan-server.py` | خادم محلي للاختبار عبر HTTPS |
 
-Create one Google Sheet per project.
+> قد تختلف الملفات الموجودة فعليًا حسب نسخة المستودع. راجع أسماء الملفات وإعداداتها قبل اتباع أي خطوات بناء أو نشر.
 
-Example:
+---
 
-- `Drone Team Attendance`
+## 🚀 البدء
 
-## 2. Add The Backend
+### 1. الحصول على المشروع
 
-1. Open the Google Sheet.
-2. Go to `Extensions` -> `Apps Script`.
-3. Delete the sample code.
-4. Paste in the contents of [`Code.gs`](/Users/ronniefellows-smith/dev/croc/project_attendance_tracker/Code.gs).
-5. Save the script.
+نزّل المستودع أو استنسخه باستخدام Git:
 
-## 3. Run Initial Setup
-
-In Apps Script:
-
-1. Select `setupSpreadsheet`
-2. Click `Run`
-3. Approve the script if prompted
-
-This creates the required tabs:
-
-- `Config`
-- `Events`
-- `Attendance`
-
-## 4. Fill In The Config Tab
-
-The `Config` tab must use this exact header row:
-
-```text
-Project Name | Password | Session Name | Day | Start Time | End Time | Active
+```bash
+git clone YOUR_REPOSITORY_URL
+cd attendance-main
 ```
 
-Example:
+استبدل `YOUR_REPOSITORY_URL` برابط مستودعك الفعلي، واسم المجلد باسم المجلد الناتج عن التنزيل إذا كان مختلفًا.
 
-```text
-Drone Team | CR0C | Drone Team Build Session | Tuesday  | 16:30 | 21:00 | TRUE
-Drone Team | CR0C | CRoC Build Night         | Thursday | 17:40 | 21:00 | TRUE
-```
+### 2. تشغيل الواجهة
 
-Column meanings:
+يمكن فتح `index.html` مباشرة لإجراء اختبار أساسي، لكن التشغيل المباشر قد لا يتيح جميع إمكانات المتصفح.
 
-- `Project Name`: shown in the page title and heading
-- `Password`: required to unlock the frontend
-- `Session Name`: label for that session
-- `Day`: full weekday name such as `Tuesday`
-- `Start Time`: `HH:MM`
-- `End Time`: `HH:MM`
-- `Active`: `TRUE` to enable the session row
+للاستفادة من ميزات مثل Service Worker والتثبيت، استخدم استضافة HTTPS أو بيئة محلية مناسبة.
 
-Use the same `Project Name` and `Password` on each active row for that project sheet.
+إذا كنت تستخدم الخادم المحلي المرفق بالمشروع، راجع تعليماته وطريقة تشغيله قبل استخدامه.
 
-## 5. Review Backend Settings
+### 3. التحقق من عمل التطبيق
 
-The backend operational settings are near the top of [`Code.gs`](/Users/ronniefellows-smith/dev/croc/project_attendance_tracker/Code.gs):
+قبل استخدام بيانات فعلية، يُفضّل اختبار العمليات الأساسية:
 
-```javascript
-var SETTINGS = {
-  duplicateCooldownSeconds: 10,
-  standardizedFallbackAttendanceHours: 1,
-  finalizationGraceSeconds: 30,
-  recentLimit: 12,
-  syncBatchSize: 10,
-};
-```
+- إضافة طالب وتعديل بياناته.
+- تسجيل الحضور والحفظ.
+- تسجيل دفعة ومراجعة سجلها.
+- تصدير نسخة احتياطية واستعادتها.
+- تجربة المزامنة إذا كانت مُعدّة.
 
-What they control:
+---
 
-- `duplicateCooldownSeconds`: short cooldown that prevents an immediate second scan from accidentally signing someone out
-- `standardizedFallbackAttendanceHours`: fallback attendance used for an unfinished final interval at session end
-- `finalizationGraceSeconds`: short delay after session end before attendance is finalized, to allow late syncs to arrive
-- `recentLimit`: how many recent events the frontend shows
-- `syncBatchSize`: how many queued events are sent to the backend at once
+## ☁️ إعداد Google Sheets
 
-The default values are sufficient for normal use. You usually do not need to change them.
+تتطلب المزامنة إعداد Google Apps Script ونشره بطريقة تسمح للتطبيق بالوصول إلى واجهة المزامنة.
 
-If you do want to adjust them:
+### خطوات الإعداد
 
-1. Edit the `SETTINGS` object in [`Code.gs`](/Users/ronniefellows-smith/dev/croc/project_attendance_tracker/Code.gs)
-2. Save the Apps Script project
-3. Redeploy the web app as a new version
+1. جهّز جدول بيانات Google Sheets لاستخدامه مع التطبيق.
+2. افتح Google Apps Script وأنشئ مشروعًا مناسبًا أو استخدم المشروع الموجود لديك.
+3. أضف كود `Code.gs` وتأكد من توافقه مع إصدار التطبيق.
+4. انشر المشروع كتطبيق ويب واضبط صلاحيات الوصول بما يتناسب مع الاستخدام.
+5. انسخ رابط تطبيق الويب الناتج عن النشر.
+6. افتح إعدادات المزامنة داخل دار الحافظ وأدخل الرابط.
+7. اختبر الاتصال، ثم نفّذ مزامنة تجريبية.
+8. راجع البيانات في التطبيق وفي Google Sheets للتأكد من النتائج.
 
-## 6. Deploy The Backend
+### ⚠️ تنبيهات مهمة
 
-After saving the script:
+- وجود `Code.gs` وحده لا يعني أن المزامنة جاهزة؛ يجب نشر المشروع وضبط الصلاحيات.
+- لا تمنح صلاحيات وصول أوسع من المطلوب.
+- احتفظ بنسخة احتياطية قبل تجربة المزامنة على بيانات حقيقية.
+- اختبر إضافة البيانات وتعديلها ومزامنتها لتحديد السلوك الفعلي للإصدار المستخدم.
 
-1. Click `Deploy` -> `New deployment`
-2. Choose `Web app`
-3. Set:
-   - `Execute as`: `Me`
-   - `Who has access`: `Anyone`
-4. Click `Deploy`
-5. Copy the web app URL
+---
 
-For project admins:
+## 📱 التثبيت والبناء
 
-- use `Execute as: Me`
-- use `Who has access: Anyone`
-- these settings let the public frontend call the Apps Script backend correctly
+### PWA
 
-If you change the backend later:
+لنشر التطبيق كتطبيق ويب قابل للتثبيت:
 
-1. Save the Apps Script code
-2. Open `Deploy` -> `Manage deployments`
-3. Edit the web app deployment
-4. Select `New version`
-5. Deploy again
+1. ارفع ملفات الواجهة وملفات `manifest.json` و`sw.js` و`version.json` والأيقونات اللازمة.
+2. استخدم استضافة تدعم HTTPS.
+3. تأكد من صحة مسارات الملفات وإعدادات التخزين المؤقت.
+4. اختبر التثبيت والتحديث على المتصفحات المستهدفة.
 
-The URL usually stays the same, but the deployment version must be updated.
+قد تختلف خطوات التثبيت حسب المتصفح ونظام التشغيل.
 
-## 7. Connect The Frontend
+### Android وiOS
 
-Open [`index.html`](/Users/ronniefellows-smith/dev/croc/project_attendance_tracker/index.html) and set the backend URL in the `CONFIG` constant:
+يتضمن المشروع إعدادات مرتبطة بـ Capacitor وGitHub Actions لتجهيز عمليات البناء.
 
-```javascript
-const CONFIG = {
-  apiUrl: "YOUR_APPS_SCRIPT_WEB_APP_URL",
-  storagePrefix: "croc-attendance-v3",
-  syncRetryMs: 4000,
-  pollIntervalMs: 15000
-};
-```
+قبل البناء:
 
-Replace `apiUrl` with your deployed Apps Script web app URL.
+- تأكد من إعداد Node.js وnpm وفق متطلبات المشروع.
+- راجع `package.json` لمعرفة أوامر البناء الفعلية.
+- راجع `capacitor.config.json` للتأكد من إعدادات التطبيق.
+- تحقق من إعدادات GitHub Actions وأي متغيرات أو أسرار مطلوبة.
 
-Important:
+بالنسبة إلى iOS، قد يتطلب تثبيت التطبيق على جهاز فعلي توقيعًا وشهادة مناسبة. إنشاء ملف IPA لا يضمن وحده إمكانية تثبيته على كل الأجهزة.
 
-- do not leave the placeholder value in place
-- do not point two different projects at the same backend sheet unless you intentionally want them sharing attendance data
-- if you copy this repo for a new project, changing `apiUrl` is the first frontend change you should make
+راجع ملفات تعليمات البناء الموجودة في المستودع للحصول على الخطوات الخاصة بنسختك.
 
-The frontend does not store the password. Users enter it on the page, and the backend verifies it against the `Config` tab.
+---
 
-## 8. Deploy The Frontend
+## 💾 البيانات والنسخ الاحتياطي
 
-The frontend is a single file:
+حماية البيانات مهمة، خصوصًا عند إدارة بيانات الطلاب وأرقام التواصل.
 
-- [`index.html`](/Users/ronniefellows-smith/dev/croc/project_attendance_tracker/index.html)
+- صدّر نسخة JSON احتياطية بانتظام.
+- احتفظ بنسخة خارج الجهاز الذي تستخدمه للتطبيق.
+- اختبر استعادة النسخة الاحتياطية على بيانات تجريبية.
+- لا تمسح بيانات المتصفح أو التطبيق قبل التأكد من وجود نسخة احتياطية سليمة.
+- احتفظ بنسخة قبل تحديث التطبيق أو تغيير آلية التخزين.
+- لا تفترض أن البيانات المحلية ستنتقل تلقائيًا إلى جهاز آخر.
+- لا تفترض أن المزامنة السحابية بديل كامل للنسخ الاحتياطي إلا بعد التحقق من طريقة عملها.
 
-If GitHub Pages is already configured:
+---
 
-1. Update `index.html`
-2. Commit the change
-3. Push to GitHub
-4. Wait for GitHub Pages to redeploy
+## 🔄 تحديث التطبيق
 
-## What Project Leads Usually Need To Change
+عند تجهيز إصدار جديد، راجع الملفات المرتبطة بالإصدار والتخزين المؤقت.
 
-For most projects, you only need to change two things:
+بحسب آلية التحديث المستخدمة، قد تحتاج إلى مراجعة:
 
-1. The `Config` tab in the project’s Google Sheet
-2. The `apiUrl` in [`index.html`](/Users/ronniefellows-smith/dev/croc/project_attendance_tracker/index.html)
+1. `index.html`
+2. `version.json`
+3. `sw.js` واسم الكاش.
+4. `package.json` إذا تغير رقم إصدار الحزمة.
+5. إعدادات PWA وCapacitor عند الحاجة.
+6. رقم الإصدار المذكور في هذا الملف وواجهة «عن التطبيق».
 
-You usually do not need to change anything else.
+### قائمة مراجعة قبل النشر
 
-## Sheet Structure
+- [ ] فحص أخطاء JavaScript.
+- [ ] تجربة إضافة طالب وتعديل بياناته.
+- [ ] اختبار تسجيل الحضور والحفظ.
+- [ ] اختبار تسجيل المدفوعات.
+- [ ] تجربة البحث والتصفية.
+- [ ] اختبار التصدير والاستعادة.
+- [ ] اختبار المزامنة إذا كانت مفعّلة.
+- [ ] التأكد من ظهور التحديث للمستخدمين بعد النشر.
+- [ ] اختبار النسخة الجديدة قبل الاعتماد عليها في الاستخدام اليومي.
 
-### Config
+---
 
-Used for project name, password, and session schedule.
+## 🔐 الخصوصية والأمان
 
-### Events
+قد يتعامل التطبيق مع بيانات شخصية، بما في ذلك أسماء الطلاب وأرقام الهواتف وأرقام أولياء الأمور.
 
-The `Events` tab is append-only.
+لذلك يُنصح بما يلي:
 
-Header:
+- استخدام بيانات تجريبية أثناء التطوير.
+- حماية ملفات النسخ الاحتياطية من الوصول غير المصرح به.
+- مراجعة صلاحيات Google Apps Script قبل نشره.
+- تجنب مشاركة روابط المزامنة أو ملفات البيانات مع أشخاص غير مخوّلين.
+- التحقق من كيفية تخزين البيانات ومزامنتها قبل استخدام التطبيق في بيئة فعلية.
 
-```text
-Timestamp | Date | Member ID | Event Type | Method | Project Name | Session Name | Session Times | Day | Event ID | Device ID | Session Key
-```
+هذه الإرشادات عامة، ولا تعني أن التطبيق خضع لتدقيق أمني مستقل.
 
-You should not normally edit this tab manually.
+---
 
-### Attendance
+## 👨‍💻 المطوّر
 
-The `Attendance` tab is finalized from `Events` after a session has ended.
+تم تطوير تطبيق **دار الحافظ** بواسطة:
 
-Header:
+**Moaaz Emad**
 
-```text
-Date | Member ID | Project Name | Session Name | Session Times | Day | Sign In | Sign Out | Attendance Hours | Notes
-```
+للاستفسارات والتواصل:
 
-Notes:
+[![Telegram](https://img.shields.io/badge/Telegram-Contact%20Developer-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/Mo350az)
 
-- `Attendance Hours` is calculated as a decimal rounded to 2 decimal places
-- multiple sign-in / sign-out pairs in one session are summed
-- if someone signs in and never signs out, and the session has ended, the unfinished final interval uses the backend fallback setting
-- if the operator uses `End Session (Sign Out All)`, every remaining signed-in member is signed out with the same fallback setting
-- `Notes` stays blank for normal paired sign-in / sign-out attendance
-- `Notes` is filled automatically only when fallback time is used
-- fallback notes record whether the fallback came from `End Session (Sign Out All)` or from a missing sign-out before session end, plus the relevant event time
-- once attendance rows for a session have been appended, they are not rebuilt or overwritten later
+---
 
-You can edit past attendance rows manually after they have been imported. Future sessions append new rows only.
+## © حقوق الاستخدام
 
-## How Session Matching Works
+**التطوير: Moaaz Emad — 2026**
 
-A session is open when:
 
-- `Day` matches today
-- current time is within `Start Time <= now < End Time`
+قد تخضع المكتبات والأدوات والموارد الخارجية المستخدمة في المشروع لتراخيص مستقلة. يجب مراجعة التراخيص المنطبقة والالتزام بشروطها عند استخدام تلك المكونات أو إعادة توزيعها.
 
-If no session is open:
 
-- the page shows that no session is open
-- the next configured session is shown when available
-- sign-ins are blocked
+---
 
-## Frontend Behavior
+<div align="center">
 
-The frontend:
 
-- keeps local session state in `localStorage`
-- restores that state after refresh
-- polls the backend periodically so multiple open pages stay reasonably in sync
-- shows the current session
-- shows a live `Currently Signed In` roster
-- shows recent sign-in / sign-out activity
-- includes an `End Session (Sign Out All)` button under `Recent Activity`
-- starts the camera automatically after a successful unlock when a session is open
 
-## Scan Behavior
+تم التطوير بواسطة [Moaaz Emad](https://t.me/Mo350az)
 
-Normal scan flow:
-
-- first scan for a member signs them in
-- a quick repeat scan during the cooldown window does not sign them out
-- a later scan after the cooldown window signs them out
-- members can sign in and out multiple times in the same session, and attendance is summed
-
-End-of-session flow:
-
-- if members are still signed in, use `End Session (Sign Out All)`
-- this creates forced sign-out events for everyone still on the roster
-- those forced sign-outs use the same backend-configured fallback interval as members who never signed out before session end
-- pressing `End Session (Sign Out All)` does not close the session early; students can still sign in again until the scheduled `End Time`
-- once the configured finish time has passed and the `finalizationGraceSeconds` delay has elapsed, the backend finalizes that session from `Events`
-- finalization appends one attendance row per member for that session/date
-- late syncs for an already finalized session are ignored
-
-## First-Time Test
-
-Use a wide test session first:
-
-```text
-Project Name | Password | Session Name | Day | Start Time | End Time | Active
-Drone Team   | CR0C     | Test         | Friday | 01:00 | 20:00 | TRUE
-```
-
-Then test:
-
-1. Open the frontend page.
-2. Enter the password.
-3. Confirm the title becomes `Drone Team Attendance`.
-4. Scan or enter one member ID.
-5. Confirm they appear in `Currently Signed In`.
-6. Scan the same member again immediately and confirm they stay signed in.
-7. Scan the same member again after the duplicate cooldown window and confirm they sign out.
-8. Sign in one member and use `End Session (Sign Out All)`.
-9. Confirm they are removed from `Currently Signed In`.
-10. Refresh the page and confirm the roster restores correctly.
-11. Confirm the events appear in `Events`.
-12. After the session finish time passes, confirm attendance rows are appended to `Attendance`.
-
-## Troubleshooting
-
-### Access denied / invalid action
-
-Usually one of these:
-
-- the frontend `apiUrl` points to the wrong Apps Script deployment
-- the Apps Script code was saved but not redeployed as a new version
-- the page password does not match the `Password` column in `Config`
-
-### Session time must use HH:MM format
-
-Use `HH:MM` values in `Config`, for example:
-
-- `01:00`
-- `16:30`
-- `20:00`
-
-### The page shows the wrong project name
-
-Check the first non-empty `Project Name` value in the `Config` tab.
-
-### Events are not appearing
-
-Check:
-
-- the Apps Script deployment is current
-- the frontend is using the correct `apiUrl`
-- the session is currently open
-
-### Attendance is not appearing yet
-
-Attendance is only appended after the configured session end time has passed and the short finalization grace period has elapsed. Before that, only `Events` updates.
-
-### Attendance looks lower than expected for someone who forgot to sign out
-
-That is expected if they were left signed in until session end or signed out via `End Session (Sign Out All)`. In those cases the backend uses `standardizedFallbackAttendanceHours` for the unfinished final interval instead of calculating the full elapsed time.
-
-### Why is there text in the `Notes` column for some attendance rows
-
-That means fallback time was used instead of a normal paired sign-in / sign-out duration. The note tells you whether it came from `End Session (Sign Out All)` or from a missing sign-out before the session was finalized.
-
-### I edited old attendance rows and do not want them overwritten
-
-That is the current design. `Attendance` rows are appended once when a session is finalized. Later sessions append new rows only, and previously imported attendance rows are not rebuilt.
-
-### The roster looks stale
-
-The page restores local state immediately, then syncs and polls the backend. If another device just scanned, wait for the next poll or refresh the page.
-
-
-## V19.3 fixes
-- QR scanner uses the legacy self-contained build so the worker is not a separate external file.
-- Added iOS 180x180 apple-touch-icon and apple-mobile-web-app-title.
-- Service-worker cache bumped to v20.
+</div>

@@ -1,14 +1,27 @@
-# Capacitor build setup
+# بناء دار الحافظ عبر Capacitor وGitHub Actions
 
-The existing PWA files stay at the repository root. GitHub Actions creates a clean `www/` package during each build, downloads the QR scanner and QR generator into that package, and then builds the native app.
+تظل ملفات الويب الأصلية في جذر المستودع. تنشئ مهام GitHub Actions مجلد `www/` وتنسخ إليه ملفات الواجهة، ثم تنزّل مكتبتَي QR وتبني الحزمة الأصلية. لا يحتوي ZIP على مجلدي `android/` و`ios/`؛ يتم إنشاؤهما أثناء البناء.
 
-## Workflows
+## قبل البناء
+- ارفع المشروع إلى مستودع GitHub.
+- من تبويب **Actions**، فعّل GitHub Actions إذا طُلب ذلك.
+- افتح سير العمل المطلوب واضغط **Run workflow**؛ كلا الملفين مضبوط على التشغيل اليدوي (`workflow_dispatch`).
 
-- `.github/workflows/build-android.yml` → Android debug APK artifact `attendance-android-apk`
-- `.github/workflows/build-ios.yml` → unsigned IPA artifact `attendance-ios-ipa`
+## Android
+- سير العمل: `.github/workflows/build-android.yml`
+- يستخدم Ubuntu وNode.js 24 وJava 21، ثم يبني Debug APK.
+- ينشئ artifact باسم `dar-alhafez-android-apk` ويصدر GitHub Release باسم يتضمن رقم التشغيل. يتطلب إنشاء الإصدار صلاحية الكتابة للمستودع.
+- ملف APK الناتج هو نسخة Debug، وليس إصدار متجر موقّعًا بمفتاح نشر خاص.
 
-The native package does not need the QR libraries from a CDN at runtime: the workflows vendor them into `www/` before Capacitor packages the app. The iOS IPA is unsigned and must be signed before installation.
+## iOS
+- سير العمل: `.github/workflows/build-ios.yml`
+- يستخدم macOS وNode.js 24 وXcode لإنشاء IPA غير موقّع.
+- يرفع artifact باسم `dar-alhafez-ios-ipa`. ملف IPA غير الموقّع لا يمكن تثبيته مباشرة بالطريقة المعتادة؛ يلزم توقيع وتوزيع مناسبين.
 
-## Important
+## مكتبات QR
+تُنزّل سير العمل مكتبة `qr-scanner` ومكتبة `qrcode-generator` أثناء البناء وتجهزهما محليًا داخل `www/`؛ لا يعتمد تشغيل النسخة الأصلية المبنية على تحميلهما من CDN وقت الاستخدام.
 
-This ZIP is a prepared project for the GitHub repository. It does not contain generated `android/` or `ios/` directories because the workflows create those on the GitHub runners.
+## ملاحظات
+- إعداد Capacitor في `capacitor.config.json` يستخدم `webDir: "www"` واسم التطبيق «دار الحافظ».
+- قبل توزيع أي إصدار، اختبر تسجيل طالب والحضور والحفظ والمدفوعات وQR والنسخ الاحتياطي والمزامنة على جهاز فعلي.
+- راجع تراخيص المكتبات الخارجية قبل إعادة التوزيع.
