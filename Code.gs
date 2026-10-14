@@ -12,7 +12,7 @@ const SHEETS = {
 const OLD_SHEETS = {
   STUDENTS: 'Students', RECORDS: 'Records', CONFIG: 'Config', DASHBOARD: 'Dashboard', DETAIL: 'Student Details'
 };
-const STUDENT_HEADERS = ['المعرف','الاسم','العمر','المجموعة','الهاتف','هاتف ولي الأمر','آخر تحديث','الأيام'];
+const STUDENT_HEADERS = ['المعرف','الاسم','العمر','المجموعة','الهاتف','هاتف ولي الأمر','آخر تحديث','الأيام','الحالة'];
 const RECORD_HEADERS = ['معرف السجل','التاريخ','معرف الطالب','الحالة','الحفظ','آخر تحديث'];
 const CONFIG_HEADERS = ['المفتاح','القيمة'];
 const PAYMENT_HEADERS = ['معرف الدفعة','التاريخ','الفترة','النوع','الطلاب','المبلغ الإجمالي','المجموعة','ملاحظات','آخر تحديث'];
@@ -48,6 +48,29 @@ function doPost(e) {
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({success:false,message:String(err && err.message || err)})).setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+// تحقق خفيف للاستخدام أثناء المزامنة: لا يعيد بناء لوحة التحكم أو يمسح تفاصيل الطالب.
+// التهيئة والترحيل الكاملان يظلان في setupSpreadsheet() للتشغيل اليدوي عند الحاجة.
+function ensureSyncSheets_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const required = [
+    [SHEETS.STUDENTS, STUDENT_HEADERS],
+    [SHEETS.RECORDS, RECORD_HEADERS],
+    [SHEETS.PAYMENTS, PAYMENT_HEADERS],
+    [SHEETS.CONFIG, CONFIG_HEADERS]
+  ];
+  required.forEach(([name, headers]) => {
+    let sh = ss.getSheetByName(name);
+    if (!sh) {
+      sh = ss.insertSheet(name);
+      sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sh.setFrozenRows(1);
+    }
+  });
+  const config = ss.getSheetByName(SHEETS.CONFIG);
+  if (config.getLastRow() < 2) config.getRange(2,1,1,2).setValues([['التطبيق','حضور وحفظ']]);
+  try { config.hideSheet(); } catch (_) {}
 }
 
 function setupSpreadsheet() {
@@ -148,18 +171,20 @@ function migrateStudentsSchema_(ss) {
     id: ['المعرف','ID','Id','id'], name: ['الاسم','Name','name'], age: ['العمر','Age','age'],
     group: ['المجموعة','Group','group'], phone: ['الهاتف','Phone','phone'],
     guardian: ['هاتف ولي الأمر','رقم ولي الأمر','Guardian Phone','Parent Phone','guardianPhone','parentPhone'],
-    updated: ['آخر تحديث','Updated At','updatedAt','Last Updated']
+    updated: ['آخر تحديث','Updated At','updatedAt','Last Updated'],
+    days: ['الأيام','Days','days'],
+    status: ['الحالة','Status','status']
   };
   const findIndex = keys => { for (const k of keys) if (oldIndex[k] !== undefined) return oldIndex[k]; return -1; };
-  const idx = {id:findIndex(aliases.id),name:findIndex(aliases.name),age:findIndex(aliases.age),group:findIndex(aliases.group),phone:findIndex(aliases.phone),guardian:findIndex(aliases.guardian),updated:findIndex(aliases.updated)};
-  const valueAt = (row,i) => i >= 0 ? row[i] : '';
-  const migrated = rows.map(row => [valueAt(row,idx.id),valueAt(row,idx.name),valueAt(row,idx.age),valueAt(row,idx.group),valueAt(row,idx.phone),valueAt(row,idx.guardian),valueAt(row,idx.updated)]);
-  sh.getRange(1,1,1,7).setValues([STUDENT_HEADERS.slice(0,7)]);
-  if (migrated.length) sh.getRange(2,1,migrated.length,7).setValues(migrated);
+  const idx = {id:findIndex(aliases.id),name:findIndex(aliases.name),age:findIndex(aliases.age),group:findIndex(aliases.group),phone:findIndex(aliases.phone),guardian:findIndex(aliases.guardian),updated:findIndex(aliases.updated),days:findIndex(aliases.days),status:findIndex(aliases.status)};
+  const valueAt = (row,i,def='') => (i >= 0 && row[i] !== undefined && row[i] !== '') ? row[i] : def;
+  const migrated = rows.map(row => [valueAt(row,idx.id),valueAt(row,idx.name),valueAt(row,idx.age),valueAt(row,idx.group),valueAt(row,idx.phone),valueAt(row,idx.guardian),valueAt(row,idx.updated),valueAt(row,idx.days,'[]'),valueAt(row,idx.status,'نشط')]);
+  sh.getRange(1,1,1,STUDENT_HEADERS.length).setValues([STUDENT_HEADERS]);
+  if (migrated.length) sh.getRange(2,1,migrated.length,STUDENT_HEADERS.length).setValues(migrated);
 }
 
 function sync_(payload) {
-  setupSpreadsheet();
+  ensureSyncSheets_();
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
@@ -178,11 +203,12 @@ function sync_(payload) {
     students.forEach(s => {
       if (!s || !s.id || !s.updatedAt) return;
       const row = studentMap[String(s.id)];
-      const values = [String(s.id), String(s.name || ''), s.age == null || s.age === '' ? '' : Number(s.age), String(s.group || ''), String(s.phone || ''), String(s.guardianPhone || s.parentPhone || ''), String(s.updatedAt), JSON.stringify(Array.isArray(s.days) ? s.days.map(Number) : [])];
+      const statusText = s.archived ? 'مؤرشف' : 'نشط';
+      const values = [String(s.id), String(s.name || ''), s.age == null || s.age === '' ? '' : Number(s.age), String(s.group || ''), String(s.phone || ''), String(s.guardianPhone || s.parentPhone || ''), String(s.updatedAt), JSON.stringify(Array.isArray(s.days) ? s.days.map(Number) : []), statusText];
       if (row) {
-        const old = studentSheet.getRange(row,1,1,8).getValues()[0];
+        const old = studentSheet.getRange(row,1,1,9).getValues()[0];
         if (String(old[6] || '') < String(s.updatedAt)) {
-          studentSheet.getRange(row,1,1,8).setValues([values]); studentsChanged++;
+          studentSheet.getRange(row,1,1,9).setValues([values]); studentsChanged++;
         }
       } else {
         studentSheet.appendRow(values); studentsChanged++;
@@ -287,11 +313,11 @@ function normalizeTimestamp_(v) {
 }
 
 function pull_(since) {
-  setupSpreadsheet();
+  ensureSyncSheets_();
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const students = rowsToObjects_(ss.getSheetByName(SHEETS.STUDENTS), STUDENT_HEADERS)
     .filter(x => !since || normalizeTimestamp_(x['آخر تحديث']) > String(since))
-    .map(x => ({id:String(x['المعرف']),name:String(x['الاسم']||''),age:x['العمر']===''||x['العمر']==null?'':Number(x['العمر']),group:String(x['المجموعة']||''),phone:String(x['الهاتف']||''),guardianPhone:String(x['هاتف ولي الأمر']||''),updatedAt:normalizeTimestamp_(x['آخر تحديث']),days:(function(){try{const v=JSON.parse(String(x['الأيام']||'[]'));return Array.isArray(v)?v:[]}catch(e){return []}})()}));
+    .map(x => ({id:String(x['المعرف']),name:String(x['الاسم']||''),age:x['العمر']===''||x['العمر']==null?'':Number(x['العمر']),group:String(x['المجموعة']||''),phone:String(x['الهاتف']||''),guardianPhone:String(x['هاتف ولي الأمر']||''),updatedAt:normalizeTimestamp_(x['آخر تحديث']),days:(function(){try{const v=JSON.parse(String(x['الأيام']||'[]'));return Array.isArray(v)?v:[]}catch(e){return []}})(),archived:String(x['الحالة']||'').trim()==='مؤرشف'}));
   const records = rowsToObjects_(ss.getSheetByName(SHEETS.RECORDS), RECORD_HEADERS)
     .filter(x => !since || normalizeTimestamp_(x['آخر تحديث']) > String(since))
     .map(x => ({id:String(x['معرف السجل']),date:normalizeDate_(x['التاريخ']),studentId:String(x['معرف الطالب']),status:String(x['الحالة']||'') === 'غائب' ? 'absent' : 'present',memory:x['الحفظ']===''||x['الحفظ']==null?null:Number(x['الحفظ']),updatedAt:normalizeTimestamp_(x['آخر تحديث'])}));
@@ -325,7 +351,7 @@ function rebuildDashboard_() {
   if (dash.getFilter()) dash.getFilter().remove();
   if (dash.getMaxRows() > 4) dash.getRange(5,1,dash.getMaxRows()-4,10).clearContent();
 
-  const studentRows = rowsToObjects_(students, STUDENT_HEADERS);
+  const studentRows = rowsToObjects_(students, STUDENT_HEADERS).filter(s => String(s['الحالة'] || '').trim() !== 'مؤرشف');
   const recordRows = rowsToObjects_(records, RECORD_HEADERS);
   const byStudent = {};
   recordRows.forEach(r => {

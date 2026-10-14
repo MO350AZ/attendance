@@ -1,11 +1,13 @@
-const CACHE='attendance-pwa-v28';
-const CORE=['./','./index.html','./manifest.json','./version.json','./icon-512.png'];
-const EXTERNAL=['https://unpkg.com/qr-scanner@1.4.2/qr-scanner.legacy.min.js'];
+const CACHE='attendance-pwa-v32';
+const CORE=['./','./index.html','./manifest.json','./version.json','./icon-192.png','./icon-512.png','./apple-touch-icon.png'];
+const EXTERNAL=[
+  'https://unpkg.com/qr-scanner@1.4.2/qr-scanner.legacy.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'
+];
 self.addEventListener('install',event=>event.waitUntil((async()=>{
   const cache=await caches.open(CACHE);
   await Promise.all(CORE.map(async url=>{try{const r=await fetch(url,{cache:'no-store'});if(r.ok)await cache.put(url,r.clone())}catch(e){}}));
   await Promise.all(EXTERNAL.map(async url=>{try{const r=await fetch(url,{mode:'no-cors',cache:'no-store'});if(r)await cache.put(url,r)}catch(e){}}));
-  // Activate the new worker as soon as it is installed. The app data is in IndexedDB and is untouched.
   self.skipWaiting();
 })()));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{
@@ -23,7 +25,6 @@ self.addEventListener('fetch',event=>{
   if(EXTERNAL.includes(url.href)){
     event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(event.request,copy));return r})));return;
   }
-  // HTML/app-shell must prefer the network so GitHub Pages changes are not trapped behind an old cache.
   const isNavigation=event.request.mode==='navigate' || url.pathname.endsWith('/index.html') || url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname.endsWith('.json') || url.pathname.endsWith('/manifest.json');
   if(isNavigation){
     event.respondWith(fetch(event.request,{cache:'no-store'}).then(r=>{
