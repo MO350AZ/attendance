@@ -663,6 +663,7 @@
             /><input
               id="memoryInput"
               type="number"
+							inputmode="numeric"
               min="0"
               max="100"
               placeholder="درجة الحفظ %"
@@ -1042,6 +1043,7 @@
             /><input
               id="paymentAmount"
               type="number"
+							inputmode="numeric"
               min="0"
               step="0.01"
               placeholder="إجمالي المبلغ بالجنيه"
@@ -1392,6 +1394,7 @@
           submit = $("appDialogSubmit");
         input.value = defaultValue == null ? "" : String(defaultValue);
         input.style.display = type === "prompt" ? "block" : "none";
+        input.inputMode = type === "prompt" ? "numeric" : "text";
         cancel.style.display =
           type === "confirm" || type === "prompt" ? "block" : "none";
         submit.textContent =
