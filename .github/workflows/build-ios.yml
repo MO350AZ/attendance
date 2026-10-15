@@ -1,10 +1,15 @@
-name: Build iOS IPA
+
+name: Build iOS IPA and Release
 
 on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: dar-alhafez-ios-release
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -13,15 +18,79 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Bump version
+        id: version
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          path = Path("version.json")
+          if not path.exists():
+              raise SystemExit("ERROR: version.json not found")
+
+          data = json.loads(path.read_text(encoding="utf-8"))
+
+          if isinstance(data, dict):
+              keys = ("version", "appVersion", "app_version")
+              key = next((k for k in keys if k in data), None)
+              if key is None:
+                  raise SystemExit(
+                      "ERROR: No version, appVersion, or app_version "
+                      "field found in version.json"
+                  )
+              current = str(data[key])
+          elif isinstance(data, str):
+              key = None
+              current = data
+          else:
+              raise SystemExit("ERROR: Unsupported version.json format")
+
+          match = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)", current.strip())
+          if not match:
+              raise SystemExit(
+                  f"ERROR: Unsupported version format: {current}"
+              )
+
+          major, minor, patch = map(int, match.groups())
+          new_version = f"{major}.{minor}.{patch + 1}"
+
+          if key is None:
+              data = new_version
+          else:
+              data[key] = new_version
+
+          path.write_text(
+              json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write(f"version={new_version}\n")
+              f.write(f"tag=v{new_version}\n")
+
+          print(f"Version: {current} -> {new_version}")
+          PY
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Prepare web app
         run: |
@@ -37,8 +106,11 @@ jobs:
 
           python3 tools/prepare_native.py
 
-      - name: Add iOS
-        run: npx cap add ios
+      - name: Add iOS if missing
+        run: |
+          if [ ! -f ios/App/Podfile ]; then
+            npx cap add ios
+          fi
 
       - name: Generate icons
         run: npx capacitor-assets generate --ios
@@ -57,10 +129,19 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync ios
 
+      - name: Install CocoaPods dependencies
+        working-directory: ios/App
+        run: pod install --repo-update
+
+      - name: Verify iOS workspace
+        run: |
+          test -f ios/App/App.xcworkspace/contents.xcworkspacedata
+          xcodebuild -list -workspace ios/App/App.xcworkspace
+
       - name: Build unsigned iOS app
         run: |
           xcodebuild \
-            -project ios/App/App.xcodeproj \
+            -workspace ios/App/App.xcworkspace \
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
@@ -74,20 +155,46 @@ jobs:
         run: |
           rm -rf Payload Attendance.ipa
 
-          mkdir Payload
+          APP_PATH="build/Build/Products/Release-iphoneos/App.app"
+          test -d "$APP_PATH"
 
-          cp -R \
-            build/Build/Products/Release-iphoneos/App.app \
-            Payload/App.app
+          mkdir Payload
+          cp -R "$APP_PATH" Payload/App.app
 
           zip -qry Attendance.ipa Payload
-
           ls -lh Attendance.ipa
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dar-alhafez-ios-ipa
+          name: dar-alhafez-ios-ipa-v${{ steps.version.outputs.version }}
           path: Attendance.ipa
           if-no-files-found: error
+          retention-days: 30
 
+      - name: Commit updated version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add version.json
+
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: release v${VERSION}"
+            git push origin "HEAD:${BRANCH}"
+          else
+            echo "No version changes to commit."
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          gh release create "$TAG" Attendance.ipa \
+            --title "Dar Al-Hafez $TAG" \
+            --generate-notes
