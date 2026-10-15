@@ -198,6 +198,38 @@
         text-align: center;
         letter-spacing: 0.4px;
       }
+      /* Keep iOS native date picker, but show our own stable DD/MM/YYYY text. */
+      .payment-date-control {
+        position: relative;
+        min-width: 0;
+      }
+      .payment-date-display {
+        min-height: 48px;
+        box-sizing: border-box;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        direction: ltr;
+        unicode-bidi: isolate;
+        text-align: center;
+        font-size: inherit;
+        color: var(--text, #111827);
+        background: var(--input-bg, #fff);
+        border: 1px solid var(--border, #cbd5e1);
+        border-radius: 14px;
+        padding: 12px;
+        pointer-events: none;
+      }
+      .payment-date-control input[type="date"] {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        opacity: 0.015;
+        cursor: pointer;
+      }
       .group-picker {
         position: relative;
         min-width: 0;
@@ -854,6 +886,33 @@
             id="studentSearch"
             placeholder="بحث بالاسم أو ID أو المجموعة أو الهاتف"
           />
+          <button type="button" id="openBulkDaysModal" class="secondary" style="width:100%; margin-top:12px">🗓️ تعديل أيام مجموعة كاملة</button>
+          <div id="bulkDaysModal" class="qr-modal hidden" role="dialog" aria-modal="true" aria-labelledby="bulkDaysTitle">
+            <div class="qr-modal-card">
+              <h3 id="bulkDaysTitle" style="margin:0 0 8px">🗓️ تعديل أيام حضور مجموعة كاملة</h3>
+              <p class="small">اختر المجموعة وحدد أيام الحضور الجديدة؛ سيتم تطبيقها على كل طلاب المجموعة مرة واحدة.</p>
+              <label for="bulkDaysGroup">المجموعة</label>
+              <select id="bulkDaysGroup" style="width:100%; margin:6px 0 10px"><option value="">اختر المجموعة</option></select>
+              <div style="display:flex; flex-wrap:wrap; gap:8px" id="bulkDaysOptions">
+                <label><input type="checkbox" class="bulkDay" value="6" style="width:auto"> السبت</label>
+                <label><input type="checkbox" class="bulkDay" value="0" style="width:auto"> الأحد</label>
+                <label><input type="checkbox" class="bulkDay" value="1" style="width:auto"> الاثنين</label>
+                <label><input type="checkbox" class="bulkDay" value="2" style="width:auto"> الثلاثاء</label>
+                <label><input type="checkbox" class="bulkDay" value="3" style="width:auto"> الأربعاء</label>
+                <label><input type="checkbox" class="bulkDay" value="4" style="width:auto"> الخميس</label>
+                <label><input type="checkbox" class="bulkDay" value="5" style="width:auto"> الجمعة</label>
+              </div>
+              <div class="row" style="margin-top:8px">
+                <button type="button" class="secondary" onclick="setBulkDays([0,1,2,3,4])">الأحد إلى الخميس</button>
+                <button type="button" class="secondary" onclick="setBulkDays([0,2,4])">أحد · ثلاثاء · خميس</button>
+                <button type="button" class="secondary" onclick="setBulkDays([6,1,3])">سبت · اثنين · أربعاء</button>
+                <button type="button" class="secondary" onclick="setBulkDays([])">مسح الأيام</button>
+              </div>
+              <button type="button" id="applyBulkDays" style="width:100%; margin-top:10px">تطبيق على المجموعة</button>
+              <button type="button" id="closeBulkDaysModal" class="secondary" style="width:100%; margin-top:8px">إلغاء</button>
+              <div id="bulkDaysMessage" class="small" style="margin-top:8px"></div>
+            </div>
+          </div>
           <div
             id="studentList"
             class="list"
@@ -1031,13 +1090,19 @@
             <select id="paymentType">
               <option value="single">طالب واحد</option>
               <option value="shared">دفعة مشتركة لعدة طلاب</option></select
-            ><input
-              id="paymentDate"
-              type="text"
-              inputmode="numeric"
-              maxlength="10"
-              placeholder="تاريخ الدفع يوم/شهر/سنة"
-            /><input
+            ><label class="date-field">
+              <span class="small">تاريخ الدفع</span>
+              <div class="payment-date-control">
+                <div id="paymentDateDisplay" class="payment-date-display" dir="ltr">15/10/2026</div>
+                <input
+                  id="paymentDate"
+                  type="date"
+                  lang="en-GB"
+                  dir="ltr"
+                  aria-label="تاريخ الدفع"
+                />
+              </div>
+            </label><input
               id="paymentPeriod"
               placeholder="الشهر/الفترة — مثال: أكتوبر 2026"
             /><input
@@ -1733,6 +1798,17 @@
               .filter(Boolean),
           ),
         ].sort((a, b) => a.localeCompare(b, "ar"));
+        const bulkGroup = $("bulkDaysGroup");
+        if (bulkGroup) {
+          const allGroups = [
+            ...new Set(d.students.map((s) => String(s.group || "").trim()).filter(Boolean)),
+          ].sort((a, b) => a.localeCompare(b, "ar"));
+          const previousBulkGroup = bulkGroup.value;
+          bulkGroup.innerHTML =
+            '<option value="">اختر المجموعة</option>' +
+            allGroups.map((g) => `<option value="${escAttr(g)}">${esc(g)}</option>`).join("");
+          if (allGroups.includes(previousBulkGroup)) bulkGroup.value = previousBulkGroup;
+        }
         let filter = $("studentGroupFilter");
         let old = filter?.value || "all";
         if (filter) {
@@ -1776,6 +1852,40 @@
                 `<div class="card student-card ${s.archived ? "archived" : ""}"><b>${esc(s.name)}</b> <span class="small">— ID: ${esc(s.id)}</span> ${s.archived ? '<span class="archive-badge">📦 مؤرشف</span>' : ""}<br><span class="small">${esc(s.group || "بدون مجموعة")} ${s.age != null ? "— السن: " + esc(s.age) : ""}${s.phone ? " — هاتف: " + esc(s.phone) : ""}${s.guardianPhone ? " — ولي الأمر: " + esc(s.guardianPhone) : ""}${s.days && s.days.length ? " — الأيام: " + esc(dayNames(s.days)) : ""}</span><div class="row" style="margin-top:8px"><button onclick="editStudent('${escAttr(s.id)}')">تعديل</button><button class="secondary" onclick="showQR('${escAttr(s.id)}')">QR</button><button onclick="openPaymentFor('${escAttr(s.id)}')">💰 دفع</button><button class="secondary" onclick="toggleArchiveStudent('${escAttr(s.id)}')">${s.archived ? "♻️ استعادة" : "📦 أرشفة"}</button></div></div>`,
             )
             .join("") || '<p class="small">لا يوجد طلاب في هذا العرض.</p>';
+      }
+
+      function setBulkDays(days) {
+        const selected = (days || []).map(Number);
+        document.querySelectorAll(".bulkDay").forEach((el) => {
+          el.checked = selected.includes(Number(el.value));
+        });
+      }
+
+      async function applyBulkGroupDays() {
+        const group = $("bulkDaysGroup").value;
+        if (!group) return appAlert("اختر المجموعة أولًا.", "مجموعة غير محددة");
+        const days = [...document.querySelectorAll(".bulkDay:checked")].map((el) => Number(el.value));
+        const d = await data();
+        const targets = d.students.filter((student) => String(student.group || "").trim() === group);
+        if (!targets.length) return appAlert("لا يوجد طلاب في المجموعة المحددة.");
+        const confirmed = await appConfirm(
+          `سيتم تعديل أيام الحضور لـ ${targets.length} طالبًا في مجموعة «${group}» إلى: ${dayNames(days) || "بدون أيام"}. هل تريد المتابعة؟`,
+          "تأكيد تعديل المجموعة",
+        );
+        if (!confirmed) return;
+        const stamp = now();
+        targets.forEach((student) => {
+          student.days = [...days];
+          student.updatedAt = stamp;
+          student.synced = false;
+        });
+        await set("students", d.students);
+        $("bulkDaysMessage").textContent = `تم تحديث أيام الحضور لـ ${targets.length} طالبًا في مجموعة ${group}.`;
+        renderStudents();
+        renderReport();
+        queueSync();
+        $("bulkDaysModal").classList.add("hidden");
+        showAppToast(`تم تعديل أيام حضور ${targets.length} طالبًا`);
       }
 
       let appToastTimer = null;
@@ -2037,6 +2147,10 @@
         renderStudents();
         queueSync();
       }
+      function syncPaymentDateDisplay() {
+        const value = $("paymentDate").value;
+        $("paymentDateDisplay").textContent = value ? formatDateDisplay(value) : "اختر التاريخ";
+      }
       function paymentDateISO() {
         return parseDateInput($("paymentDate").value) || today();
       }
@@ -2119,7 +2233,8 @@
         if (shared) refreshPaymentStudents();
       }
       function resetPaymentForm() {
-        $("paymentDate").value = formatDateDisplay(today());
+        $("paymentDate").value = today();
+        syncPaymentDateDisplay();
         $("paymentPeriod").value = "";
         $("paymentAmount").value = "";
         $("paymentGroup").value = "";
@@ -3015,17 +3130,22 @@
         } else if (v) $("recordDate").value = formatDateDisplay(v);
         renderToday();
       };
-      $("paymentDate").value = formatDateDisplay(today());
-      $("paymentDate").onblur = () => {
-        let v = parseDateInput($("paymentDate").value);
-        if (v) $("paymentDate").value = formatDateDisplay(v);
-      };
+      $("paymentDate").value = today();
+      syncPaymentDateDisplay();
+      $("paymentDate").addEventListener("input", syncPaymentDateDisplay);
+      $("paymentDate").addEventListener("change", syncPaymentDateDisplay);
       $("fromDate").value = formatDateDisplay(today());
       $("toDate").value = formatDateDisplay(today());
       $("saveStudent").onclick = saveStudent;
       $("clearStudent").onclick = resetStudentForm;
       $("studentSearch").oninput = renderStudents;
       $("studentGroupFilter").onchange = renderStudents;
+      $("applyBulkDays").onclick = applyBulkGroupDays;
+      $("openBulkDaysModal").onclick = () => $("bulkDaysModal").classList.remove("hidden");
+      $("closeBulkDaysModal").onclick = () => $("bulkDaysModal").classList.add("hidden");
+      $("bulkDaysModal").addEventListener("click", (event) => {
+        if (event.target === $("bulkDaysModal")) $("bulkDaysModal").classList.add("hidden");
+      });
       if ($("studentStatusFilter"))
         $("studentStatusFilter").onchange = renderStudents;
       $("manualScan").onclick = () =>
