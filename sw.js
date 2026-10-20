@@ -1,4 +1,4 @@
-const CACHE='attendance-pwa-v34';
+const CACHE='attendance-pwa-v42';
 const CORE=['./','./index.html','./manifest.json','./version.json','./icon-192.png','./icon-512.png','./apple-touch-icon.png'];
 const EXTERNAL=[
   'https://unpkg.com/qr-scanner@1.4.2/qr-scanner.legacy.min.js',

@@ -8,6 +8,7 @@ const SHEETS = {
   DASHBOARD: "لوحة التحكم",
   DETAIL: "تفاصيل الطالب",
   PAYMENTS: "الدفعات",
+  WARDS: "أوراد الحفظ",
 };
 const OLD_SHEETS = {
   STUDENTS: "Students",
@@ -34,7 +35,9 @@ const RECORD_HEADERS = [
   "الحالة",
   "الحفظ",
   "آخر تحديث",
+  "أوراد الحفظ",
 ];
+const WARD_HEADERS = ["معرف الورد", "معرف السجل", "معرف الطالب", "التاريخ", "النوع", "السورة", "رقم السورة", "من آية", "إلى آية", "عدد آيات السورة", "نهاية السورة", "التقييم", "ملاحظات", "آخر تحديث"];
 const CONFIG_HEADERS = ["المفتاح", "القيمة"];
 const PAYMENT_HEADERS = [
   "معرف الدفعة",
@@ -118,13 +121,26 @@ function ensureSyncSheets_() {
     [SHEETS.PAYMENTS, PAYMENT_HEADERS],
     [SHEETS.CONFIG, CONFIG_HEADERS],
   ];
+  required.push([SHEETS.WARDS, WARD_HEADERS]);
   required.forEach(([name, headers]) => {
     let sh = ss.getSheetByName(name);
     if (!sh) {
       sh = ss.insertSheet(name);
       sh.getRange(1, 1, 1, headers.length).setValues([headers]);
       sh.setFrozenRows(1);
+      return;
     }
+    // Add newly introduced columns by header name without overwriting existing rows.
+    const width = Math.max(sh.getLastColumn(), 1);
+    const existing = sh.getRange(1, 1, 1, width).getDisplayValues()[0].map(v => String(v || "").trim());
+    headers.forEach(header => {
+      if (existing.indexOf(header) === -1) {
+        const col = sh.getLastColumn() + 1;
+        sh.getRange(1, col).setValue(header);
+        existing.push(header);
+      }
+    });
+    sh.setFrozenRows(1);
   });
   const config = ss.getSheetByName(SHEETS.CONFIG);
   if (config.getLastRow() < 2)
@@ -148,6 +164,7 @@ function setupSpreadsheet() {
   ensureSheet_(ss, SHEETS.RECORDS, RECORD_HEADERS);
   ensureSheet_(ss, SHEETS.CONFIG, CONFIG_HEADERS);
   ensureSheet_(ss, SHEETS.PAYMENTS, PAYMENT_HEADERS);
+  ensureSheet_(ss, SHEETS.WARDS, WARD_HEADERS);
   const config = ss.getSheetByName(SHEETS.CONFIG);
   if (config.getLastRow() < 2)
     config.getRange(2, 1, 1, 2).setValues([["التطبيق", "حضور وحفظ"]]);
@@ -318,15 +335,18 @@ function sync_(payload) {
     const studentSheet = ss.getSheetByName(SHEETS.STUDENTS);
     const recordSheet = ss.getSheetByName(SHEETS.RECORDS);
     const paymentSheet = ss.getSheetByName(SHEETS.PAYMENTS);
+    const wardSheet = ss.getSheetByName(SHEETS.WARDS);
     const students = Array.isArray(payload.students) ? payload.students : [];
     const records = Array.isArray(payload.records) ? payload.records : [];
     const studentMap = readMap_(studentSheet, 1);
     const recordMap = readMap_(recordSheet, 1);
     const paymentMap = readMap_(paymentSheet, 1);
+    const wardMap = readMap_(wardSheet, 1);
     const payments = Array.isArray(payload.payments) ? payload.payments : [];
     let studentsChanged = 0,
       recordsChanged = 0,
-      paymentsChanged = 0;
+      paymentsChanged = 0,
+      wardsChanged = 0;
 
     students.forEach((s) => {
       if (!s || !s.id || !s.updatedAt) return;
@@ -344,13 +364,13 @@ function sync_(payload) {
         statusText,
       ];
       if (row) {
-        const old = studentSheet.getRange(row, 1, 1, 9).getValues()[0];
-        if (String(old[6] || "") < String(s.updatedAt)) {
-          studentSheet.getRange(row, 1, 1, 9).setValues([values]);
+        const oldUpdatedAt = getCellByHeader_(studentSheet, row, "آخر تحديث");
+        if (String(oldUpdatedAt || "") < String(s.updatedAt)) {
+          writeRowByHeaders_(studentSheet, row, STUDENT_HEADERS, values);
           studentsChanged++;
         }
       } else {
-        studentSheet.appendRow(values);
+        appendRowByHeaders_(studentSheet, STUDENT_HEADERS, values);
         studentsChanged++;
       }
     });
@@ -370,17 +390,32 @@ function sync_(payload) {
         status,
         r.memory == null ? "" : Number(r.memory),
         String(r.updatedAt),
+        JSON.stringify(Array.isArray(r.memorizationWards) ? r.memorizationWards : []),
       ];
       if (row) {
-        const old = recordSheet.getRange(row, 1, 1, 6).getValues()[0];
-        if (String(old[5] || "") < String(r.updatedAt)) {
-          recordSheet.getRange(row, 1, 1, 6).setValues([values]);
+        const oldUpdatedAt = getCellByHeader_(recordSheet, row, "آخر تحديث");
+        if (String(oldUpdatedAt || "") < String(r.updatedAt)) {
+          writeRowByHeaders_(recordSheet, row, RECORD_HEADERS, values);
           recordsChanged++;
         }
       } else {
-        recordSheet.appendRow(values);
+        appendRowByHeaders_(recordSheet, RECORD_HEADERS, values);
         recordsChanged++;
       }
+    });
+
+    records.forEach((r) => {
+      if (!r || !r.id || !r.studentId || !r.date) return;
+      (Array.isArray(r.memorizationWards) ? r.memorizationWards : []).forEach((w, index) => {
+        if (!w) return;
+        const wardId = String(w.id || (String(r.id) + "-ward-" + index));
+        const row = wardMap[wardId];
+        const values = [wardId, String(r.id), String(r.studentId), String(r.date), String(w.type || ""), String(w.surah || ""), Number(w.surahNo || 0), Number(w.from || 0), Number(w.to || 0), Number(w.ayahCount || 0), w.endsSurah === true || String(w.endsSurah) === "TRUE", String(w.rating || ""), String(w.notes || ""), String(r.updatedAt || "")];
+        if (row) {
+          const oldUpdatedAt = getCellByHeader_(wardSheet, row, "آخر تحديث");
+          if (String(oldUpdatedAt || "") < String(r.updatedAt || "")) { writeRowByHeaders_(wardSheet, row, WARD_HEADERS, values); wardsChanged++; }
+        } else { appendRowByHeaders_(wardSheet, WARD_HEADERS, values); wardsChanged++; }
+      });
     });
 
     payments.forEach((p) => {
@@ -412,22 +447,24 @@ function sync_(payload) {
         String(p.updatedAt),
       ];
       if (row) {
-        const old = paymentSheet.getRange(row, 1, 1, 9).getValues()[0];
-        if (String(old[8] || "") < String(p.updatedAt)) {
-          paymentSheet.getRange(row, 1, 1, 9).setValues([values]);
+        const oldUpdatedAt = getCellByHeader_(paymentSheet, row, "آخر تحديث");
+        if (String(oldUpdatedAt || "") < String(p.updatedAt)) {
+          writeRowByHeaders_(paymentSheet, row, PAYMENT_HEADERS, values);
           paymentsChanged++;
         }
       } else {
-        paymentSheet.appendRow(values);
+        appendRowByHeaders_(paymentSheet, PAYMENT_HEADERS, values);
         paymentsChanged++;
       }
     });
     rebuildDashboard_();
+    try { updateStudentDetails(); } catch (_) {}
     return {
       success: true,
       studentsChanged,
       recordsChanged,
       paymentsChanged,
+      wardsChanged,
       serverTime: new Date().toISOString(),
     };
   } finally {
@@ -444,6 +481,8 @@ function clearRecords_() {
     const sh = ss.getSheetByName(SHEETS.RECORDS);
     if (sh && sh.getLastRow() > 1)
       sh.getRange(2, 1, sh.getLastRow() - 1, sh.getLastColumn()).clearContent();
+    const wards = ss.getSheetByName(SHEETS.WARDS);
+    if (wards && wards.getLastRow() > 1) wards.getRange(2, 1, wards.getLastRow() - 1, wards.getLastColumn()).clearContent();
     const cfg = ss.getSheetByName(SHEETS.CONFIG);
     if (cfg)
       cfg.getRange("D1:E2").setValues([
@@ -470,7 +509,7 @@ function clearAll_() {
   lock.waitLock(10000);
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    [SHEETS.STUDENTS, SHEETS.RECORDS, SHEETS.PAYMENTS].forEach((name) => {
+    [SHEETS.STUDENTS, SHEETS.RECORDS, SHEETS.PAYMENTS, SHEETS.WARDS].forEach((name) => {
       const sh = ss.getSheetByName(name);
       if (sh && sh.getLastRow() > 1)
         sh.getRange(
@@ -566,6 +605,7 @@ function pull_(since) {
       status: String(x["الحالة"] || "") === "غائب" ? "absent" : "present",
       memory:
         x["الحفظ"] === "" || x["الحفظ"] == null ? null : Number(x["الحفظ"]),
+      memorizationWards: (function(){try{const v=JSON.parse(String(x["أوراد الحفظ"]||"[]"));return Array.isArray(v)?v:[];}catch(e){return [];}})(),
       updatedAt: normalizeTimestamp_(x["آخر تحديث"]),
     }));
   const payments = rowsToObjects_(
@@ -602,10 +642,10 @@ function ensureDashboard_(ss) {
   let sh = ss.getSheetByName(SHEETS.DASHBOARD);
   if (!sh) sh = ss.insertSheet(SHEETS.DASHBOARD);
   sh.clear();
-  sh.getRange("A1:J1").merge().setValue("📊 لوحة متابعة الطلاب");
+  sh.getRange("A1:M1").merge().setValue("📊 لوحة متابعة الطلاب");
   sh.getRange("A1").setFontSize(18).setFontWeight("bold");
   sh.getRange("A2").setValue("تتحدث تلقائيًا من الطلاب والسجلات بعد المزامنة");
-  sh.getRange("A4:J4").setValues([
+  sh.getRange("A4:M4").setValues([
     [
       "المعرف",
       "الطالب",
@@ -617,12 +657,15 @@ function ensureDashboard_(ss) {
       "أعلى حفظ",
       "أقل حفظ",
       "آخر تاريخ",
+      "إجمالي الأوراد",
+      "حفظ جديد",
+      "مراجعة",
     ],
   ]);
-  sh.getRange("A4:J4").setFontWeight("bold");
+  sh.getRange("A4:M4").setFontWeight("bold");
   sh.setFrozenRows(4);
   if (sh.getFilter()) sh.getFilter().remove();
-  sh.getRange("A4:J4").createFilter();
+  sh.getRange("A4:M4").createFilter();
 }
 
 function rebuildDashboard_() {
@@ -637,7 +680,7 @@ function rebuildDashboard_() {
   }
   if (dash.getFilter()) dash.getFilter().remove();
   if (dash.getMaxRows() > 4)
-    dash.getRange(5, 1, dash.getMaxRows() - 4, 10).clearContent();
+    dash.getRange(5, 1, dash.getMaxRows() - 4, 13).clearContent();
 
   const studentRows = rowsToObjects_(students, STUDENT_HEADERS).filter(
     (s) => String(s["الحالة"] || "").trim() !== "مؤرشف",
@@ -662,6 +705,9 @@ function rebuildDashboard_() {
       : "";
     const best = memories.length ? Math.max.apply(null, memories) : "";
     const worst = memories.length ? Math.min.apply(null, memories) : "";
+    const wards = rs.flatMap(r => { try { const v = JSON.parse(String(r["أوراد الحفظ"] || "[]")); return Array.isArray(v) ? v : []; } catch (_) { return []; } });
+    const newWards = wards.filter(w => w.type === "new").length;
+    const reviewWards = wards.filter(w => w.type === "review").length;
     const dates = rs
       .map((r) => String(r["التاريخ"] || ""))
       .filter(Boolean)
@@ -678,44 +724,75 @@ function rebuildDashboard_() {
       best,
       worst,
       dates.length ? dates[dates.length - 1] : "",
+      wards.length,
+      newWards,
+      reviewWards,
     ];
   });
-  if (out.length) dash.getRange(5, 1, out.length, 10).setValues(out);
+  if (out.length) dash.getRange(5, 1, out.length, 13).setValues(out);
   if (out.length) {
     dash.getRange(5, 6, out.length, 1).setNumberFormat("0.0%");
     dash.getRange(5, 7, out.length, 3).setNumberFormat("0.##");
   }
-  dash.getRange("A4:J4").createFilter();
-  dash.autoResizeColumns(1, 10);
+  dash.getRange("A4:M4").createFilter();
+  dash.autoResizeColumns(1, 13);
   dash.setFrozenRows(4);
 }
 
 function ensureDetail_(ss) {
   let sh = ss.getSheetByName(SHEETS.DETAIL);
   if (!sh) sh = ss.insertSheet(SHEETS.DETAIL);
+  // هذه ورقة تقرير مشتقة من البيانات وليست مصدرًا للبيانات الأصلية.
   sh.clear();
-  sh.getRange("A1:D1").merge().setValue("👤 تفاصيل الطالب");
-  sh.getRange("A1").setFontSize(18).setFontWeight("bold");
-  sh.getRange("A3").setValue("اختيار الطالب (ID أو الاسم)");
-  sh.getRange("B3").setValue("");
-  sh.getRange("A5:B10").setValues([
-    ["الاسم", ""],
-    ["المجموعة", ""],
-    ["الحضور", ""],
-    ["الغياب", ""],
-    ["نسبة الحضور", ""],
-    ["متوسط الحفظ", ""],
-  ]);
-  sh.getRange("A12:D12").setValues([
-    ["التاريخ", "الحالة", "الحفظ", "آخر تحديث"],
-  ]);
-  sh.getRange("A12:D12").setFontWeight("bold");
-  sh.setFrozenRows(12);
-  sh.getRange("A14:D1000").clearContent();
-  updateDetailSelector_(ss, sh);
-  sh.autoResizeColumns(1, 4);
-}
+  sh.setRightToLeft(true);
+  sh.getRange("A1:H1").merge().setValue("👤 الملف الشامل للطالب | دار الحافظ");
+  sh.getRange("A1:H1").setBackground("#173f35").setFontColor("#ffffff").setFontSize(17).setFontWeight("bold").setHorizontalAlignment("center").setVerticalAlignment("middle");
+  sh.setRowHeight(1, 42);
+  sh.getRange("A3").setValue("اختيار الطالب").setFontWeight("bold");
+  sh.getRange("B3:D3").merge().setValue("").setBackground("#fff4d6").setFontWeight("bold");
+  sh.getRange("E3:H3").merge().setValue("اختر الطالب من القائمة لتحديث الملف والإحصائيات").setFontColor("#587168");
 
+  sh.getRange("A5:D5").merge().setValue("بيانات الطالب");
+  sh.getRange("A5:D5").setBackground("#dce9df").setFontWeight("bold");
+  sh.getRange("A6:B9").setValues([
+    ["الاسم", ""], ["المعرف", ""], ["المجموعة", ""], ["العمر", ""]
+  ]);
+  sh.getRange("C6:D9").setValues([
+    ["الهاتف", ""], ["هاتف ولي الأمر", ""], ["الحالة", ""], ["آخر تحديث", ""]
+  ]);
+  sh.getRange("A6:A9").setFontWeight("bold");
+  sh.getRange("C6:C9").setFontWeight("bold");
+
+  sh.getRange("E5:H5").merge().setValue("ملخص الحضور والحفظ");
+  sh.getRange("E5:H5").setBackground("#dce9df").setFontWeight("bold");
+  sh.getRange("E6:F9").setValues([
+    ["أيام الحضور", ""], ["أيام الغياب", ""], ["نسبة الحضور", ""], ["متوسط درجة الحفظ", ""]
+  ]);
+  sh.getRange("G6:H9").setValues([
+    ["إجمالي الأوراد", ""], ["حفظ جديد", ""], ["مراجعة", ""], ["تثبيت", ""]
+  ]);
+  sh.getRange("E6:E9").setFontWeight("bold");
+  sh.getRange("G6:G9").setFontWeight("bold");
+
+  sh.getRange("A11:H11").merge().setValue("📖 تقدم الحفظ والتسميع");
+  sh.getRange("A11:H11").setBackground("#173f35").setFontColor("#ffffff").setFontWeight("bold");
+  sh.getRange("A12:H12").setValues([["متوسط تقييم الأوراد", "", "السور المختلفة", "", "آخر ورد", "", "المدفوعات المسجلة", ""]]);
+  sh.getRange("A12:H12").setFontWeight("bold").setBackground("#f5f0e4");
+  sh.getRange("A14:H14").merge().setValue("🗓️ السجل التفصيلي — الحضور وكل ورد في صف مستقل");
+  sh.getRange("A14:H14").setBackground("#173f35").setFontColor("#ffffff").setFontWeight("bold");
+  sh.getRange("A15:H15").setValues([["التاريخ", "النوع", "السورة / الحالة", "من آية", "إلى آية", "التقييم", "النسبة", "الملاحظات / آخر تحديث"]]);
+  sh.getRange("A15:H15").setFontWeight("bold").setBackground("#dce9df").setWrap(true);
+  sh.setFrozenRows(15);
+  if (sh.getFilter()) sh.getFilter().remove();
+  sh.getRange("A15:H15").createFilter();
+  sh.getRange("A16:H2000").clearContent();
+  updateDetailSelector_(ss, sh);
+  sh.setColumnWidths(1, 8, 135);
+  sh.setColumnWidth(3, 180);
+  sh.setColumnWidth(8, 240);
+  sh.getRange("A1:H2000").setVerticalAlignment("middle");
+  sh.getRange("A16:H2000").setWrap(true);
+}
 function updateDetailSelector_(ss, sh) {
   const students = rowsToObjects_(
     ss.getSheetByName(SHEETS.STUDENTS),
@@ -759,45 +836,113 @@ function updateStudentDetails(e) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sh = ss.getSheetByName(SHEETS.DETAIL);
   if (!sh) return;
-  const students = rowsToObjects_(
-    ss.getSheetByName(SHEETS.STUDENTS),
-    STUDENT_HEADERS,
-  );
-  const s = resolveDetailStudent_(sh.getRange("B3").getValue(), students);
-  sh.getRange("B5:B10").clearContent();
-  sh.getRange("A14:D1000").clearContent();
+  const studentsSheet = ss.getSheetByName(SHEETS.STUDENTS);
+  const recordsSheet = ss.getSheetByName(SHEETS.RECORDS);
+  if (!studentsSheet || !recordsSheet) return;
+  const students = rowsToObjects_(studentsSheet, STUDENT_HEADERS);
+  const selectedValue = sh.getRange("B3").getValue();
+  const s = resolveDetailStudent_(selectedValue, students);
+  // امسح نواتج التقرير فقط؛ لا نلمس أوراق الطلاب أو السجلات الأصلية.
+  sh.getRange("B6:B9").clearContent();
+  sh.getRange("D6:D9").clearContent();
+  sh.getRange("F6:F9").clearContent();
+  sh.getRange("H6:H9").clearContent();
+  ["B12", "D12", "F12", "H12"].forEach(a1 => sh.getRange(a1).clearContent());
+  const lastRow = Math.max(sh.getLastRow(), 16);
+  if (lastRow >= 16) sh.getRange(16, 1, lastRow - 15, 8).clearContent();
   if (!s) return;
+
   const id = String(s["المعرف"] || "");
-  const records = rowsToObjects_(
-    ss.getSheetByName(SHEETS.RECORDS),
-    RECORD_HEADERS,
-  ).filter((x) => String(x["معرف الطالب"]) === id);
-  const present = records.filter((r) => statusPresent_(r["الحالة"])).length;
-  const absent = records.filter((r) => statusAbsent_(r["الحالة"])).length;
-  const mem = records.map((r) => Number(r["الحفظ"])).filter((n) => !isNaN(n));
-  const total = present + absent;
-  sh.getRange("B3").setValue(`${id} — ${String(s["الاسم"] || "")}`);
-  sh.getRange("B5:B10").setValues([
-    [String(s["الاسم"] || "")],
-    [String(s["المجموعة"] || "")],
-    [present],
-    [absent],
-    [total ? present / total : ""],
-    [mem.length ? mem.reduce((a, b) => a + b, 0) / mem.length : ""],
-  ]);
-  sh.getRange("B9").setNumberFormat("0.0%");
-  const rows = records
-    .sort((a, b) => String(a["التاريخ"]).localeCompare(String(b["التاريخ"])))
-    .map((r) => [
-      String(r["التاريخ"] || ""),
-      statusPresent_(r["الحالة"]) ? "حاضر" : "غائب",
-      r["الحفظ"] === "" ? "" : Number(r["الحفظ"]),
-      String(r["آخر تحديث"] || ""),
-    ]);
-  if (rows.length) sh.getRange(14, 1, rows.length, 4).setValues(rows);
+  const name = String(s["الاسم"] || "");
+  const records = rowsToObjects_(recordsSheet, RECORD_HEADERS).filter(x => String(x["معرف الطالب"] || "") === id);
+  const presentRecords = records.filter(r => statusPresent_(r["الحالة"]));
+  const absentRecords = records.filter(r => statusAbsent_(r["الحالة"]));
+  const totalAttendance = presentRecords.length + absentRecords.length;
+  const manualScores = records.map(r => Number(r["الحفظ"])).filter(n => Number.isFinite(n) && n >= 0 && n <= 100);
+  const allWards = [];
+  records.forEach(r => {
+    let wards = [];
+    try { wards = JSON.parse(String(r["أوراد الحفظ"] || "[]")); } catch (_) { wards = []; }
+    if (!Array.isArray(wards)) return;
+    wards.forEach(w => allWards.push({ ward: w || {}, record: r }));
+  });
+  const scoreMap = { "ممتاز":100, "جيد جدًا":90, "جيد جدا":90, "جيد":80, "مقبول":70, "يحتاج مراجعة":60, "ضعيف":50 };
+  const wardScore = item => {
+    const w = item.ward;
+    const n = Number(w.score != null ? w.score : w.percentage);
+    if (Number.isFinite(n) && n >= 0 && n <= 100) return n;
+    const label = String(w.rating || w.grade || "").replace(/\s*\([^)]*\)\s*/g, "").trim();
+    return Object.prototype.hasOwnProperty.call(scoreMap, label) ? scoreMap[label] : null;
+  };
+  const rated = allWards.map(wardScore).filter(n => n !== null);
+  const avgWard = rated.length ? rated.reduce((a,b)=>a+b,0)/rated.length : "";
+  const avgManual = manualScores.length ? manualScores.reduce((a,b)=>a+b,0)/manualScores.length : "";
+  const typeOf = w => {
+    const raw = String(w.type || "").toLowerCase();
+    if (["new", "new-hifz", "حفظ جديد", "جديد"].includes(raw)) return "حفظ جديد";
+    if (["review", "past", "ماضي", "ماضٍ", "مراجعة"].includes(raw)) return "مراجعة";
+    if ([" تثبيت", "ثبات", " تثبيت ", " تثبيت "].includes(raw) || raw.includes("ثبيت") || raw === " تثبيت") return "تثبيت";
+    return String(w.type || "ورد");
+  };
+  const newCount = allWards.filter(x => typeOf(x.ward) === "حفظ جديد").length;
+  const reviewCount = allWards.filter(x => typeOf(x.ward) === "مراجعة").length;
+  const تثبيتCount = allWards.filter(x => typeOf(x.ward) === "تثبيت").length;
+  const surahs = [...new Set(allWards.map(x => String(x.ward.surah || "").trim()).filter(Boolean))];
+
+  sh.getRange("B3").setValue(`${id} — ${name}`);
+  sh.getRange("B6:B9").setValues([[name],[id],[String(s["المجموعة"] || "")],[s["العمر"] || ""]]);
+  sh.getRange("D6:D9").setValues([[String(s["الهاتف"] || "")],[String(s["هاتف ولي الأمر"] || "")],[String(s["الحالة"] || "نشط")],[String(s["آخر تحديث"] || "")]]);
+  sh.getRange("F6:F9").setValues([[presentRecords.length],[absentRecords.length],[totalAttendance ? presentRecords.length/totalAttendance : ""],[avgManual]]);
+  sh.getRange("H6:H9").setValues([[allWards.length],[newCount],[reviewCount],[تثبيتCount]]);
+  sh.getRange("F8").setNumberFormat("0.0%");
+  sh.getRange("F9").setNumberFormat("0.0");
+  sh.getRange("B12").setValue(avgWard === "" ? "" : avgWard/100).setNumberFormat("0.0%");
+  sh.getRange("D12").setValue(surahs.length);
+  const latestWard = allWards.slice().sort((a,b)=>String(b.record["التاريخ"]||"").localeCompare(String(a.record["التاريخ"]||"")))[0];
+  sh.getRange("F12").setValue(latestWard ? `${latestWard.ward.surah || ""} ${latestWard.ward.from || ""}${latestWard.ward.to ? "–"+latestWard.ward.to : ""}`.trim() : "—");
+
+  // إجمالي المدفوعات يُحسب فقط من صفوف الدفعات التي تذكر معرف الطالب أو اسمه.
+  const paymentsSheet = ss.getSheetByName(SHEETS.PAYMENTS);
+  let paidTotal = 0;
+  if (paymentsSheet && paymentsSheet.getLastRow() > 1) {
+    const paymentRows = rowsToObjects_(paymentsSheet, PAYMENT_HEADERS);
+    paymentRows.forEach(p => {
+      const who = String(p["الطلاب"] || "");
+      if (who.includes(id) || (name && who.includes(name))) paidTotal += Number(p["المبلغ الإجمالي"] || 0) || 0;
+    });
+  }
+  sh.getRange("H12").setValue(paidTotal).setNumberFormat("#,##0.00");
+
+  const timeline = [];
+  records.forEach(r => {
+    const date = String(r["التاريخ"] || "");
+    timeline.push([date, "حضور", statusPresent_(r["الحالة"]) ? "حاضر" : statusAbsent_(r["الحالة"]) ? "غائب" : String(r["الحالة"] || "—"), "", "", r["الحفظ"] === "" ? "" : r["الحفظ"], (r["الحفظ"] === "" || r["الحفظ"] == null) ? "" : Number(r["الحفظ"])/100, String(r["آخر تحديث"] || "")]);
+    let wards = [];
+    try { wards = JSON.parse(String(r["أوراد الحفظ"] || "[]")); } catch (_) { wards = []; }
+    if (!Array.isArray(wards)) return;
+    wards.forEach(w => {
+      const score = wardScore({ward:w, record:r});
+      timeline.push([
+        date,
+        typeOf(w),
+        String(w.surah || "—"),
+        w.from == null ? "" : w.from,
+        w.to == null ? "" : w.to,
+        String(w.rating || w.grade || ""),
+        score === null ? "" : score/100,
+        [String(w.endsSurah ? "نهاية السورة" : ""), String(w.notes || "")].filter(Boolean).join(" — ")
+      ]);
+    });
+  });
+  timeline.sort((a,b)=>String(b[0]).localeCompare(String(a[0])) || String(a[1]).localeCompare(String(b[1])));
+  if (timeline.length) sh.getRange(16, 1, timeline.length, 8).setValues(timeline);
+  if (timeline.length) {
+    sh.getRange(16, 7, timeline.length, 1).setNumberFormat("0.0%");
+    sh.getBandings().forEach(b => b.remove());
+    sh.getRange(15, 1, timeline.length + 1, 8).applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
+  }
   updateDetailSelector_(ss, sh);
 }
-
 function onEdit(e) {
   if (
     e &&
@@ -828,17 +973,46 @@ function readMap_(sheet, keyCol) {
   });
   return out;
 }
+// Read by the actual header names, not assumed column positions. This keeps
+// older sheets compatible when new columns were appended during migration.
+function headerMap_(sheet) {
+  const width = Math.max(sheet.getLastColumn(), 1);
+  const names = sheet.getRange(1, 1, 1, width).getDisplayValues()[0];
+  const out = {};
+  names.forEach((name, i) => {
+    const key = String(name || "").trim();
+    if (key && out[key] == null) out[key] = i + 1;
+  });
+  return out;
+}
+function getCellByHeader_(sheet, row, header) {
+  const col = headerMap_(sheet)[header];
+  return col ? sheet.getRange(row, col).getValue() : "";
+}
+function writeRowByHeaders_(sheet, row, headers, values) {
+  const map = headerMap_(sheet);
+  headers.forEach((header, i) => {
+    const col = map[header];
+    if (col) sheet.getRange(row, col).setValue(values[i]);
+  });
+}
+function appendRowByHeaders_(sheet, headers, values) {
+  const row = Math.max(sheet.getLastRow() + 1, 2);
+  writeRowByHeaders_(sheet, row, headers, values);
+}
 function rowsToObjects_(sheet, headers) {
   const n = sheet.getLastRow();
   if (n < 2) return [];
-  return sheet
-    .getRange(2, 1, n - 1, headers.length)
-    .getValues()
-    .map((row) => {
-      const o = {};
-      headers.forEach((h, i) => (o[h] = row[i]));
-      return o;
-    });
+  const width = Math.max(sheet.getLastColumn(), 1);
+  const actualHeaders = sheet.getRange(1, 1, 1, width).getDisplayValues()[0].map(v => String(v || "").trim());
+  const values = sheet.getRange(2, 1, n - 1, width).getValues();
+  return values.map(row => {
+    const o = {};
+    actualHeaders.forEach((h, i) => { if (h) o[h] = row[i]; });
+    // Preserve expected keys even if an old/malformed sheet is missing a header.
+    headers.forEach(h => { if (!(h in o)) o[h] = ""; });
+    return o;
+  });
 }
 function statusPresent_(v) {
   return (
