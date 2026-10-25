@@ -1,5 +1,6 @@
-// نظام حضور وحفظ — قاعدة محلية + مزامنة Google Sheets.
-// شغّل setupSpreadsheet() مرة واحدة بعد لصق الكود، ثم انشر Web App.
+// نظام حضور وحفظ — دار الحافظ (الإصدار 2.5.0)
+// مزامنة فائقة السرعة (دفعات مجمّعة في الذاكرة) + فصل إعداد وتنسيق الجداول ليكون يدوياً عند الحاجة فقط.
+// شغّل setupSpreadsheet() مرة واحدة بعد لصق الكود (أو من قائمة "🕌 دار الحافظ" داخل الشيت)، ثم انشر Web App.
 
 const SHEETS = {
   STUDENTS: "الطلاب",
@@ -16,6 +17,7 @@ const OLD_SHEETS = {
   CONFIG: "Config",
   DASHBOARD: "Dashboard",
   DETAIL: "Student Details",
+  PAYMENTS: "Payments",
 };
 const STUDENT_HEADERS = [
   "المعرف",
@@ -27,6 +29,7 @@ const STUDENT_HEADERS = [
   "آخر تحديث",
   "الأيام",
   "الحالة",
+  "المصروف الشهري",
 ];
 const RECORD_HEADERS = [
   "معرف السجل",
@@ -37,47 +40,93 @@ const RECORD_HEADERS = [
   "آخر تحديث",
   "أوراد الحفظ",
 ];
-const WARD_HEADERS = ["معرف الورد", "معرف السجل", "معرف الطالب", "التاريخ", "النوع", "السورة", "رقم السورة", "من آية", "إلى آية", "عدد آيات السورة", "نهاية السورة", "التقييم", "ملاحظات", "آخر تحديث"];
+const WARD_HEADERS = [
+  "معرف الورد",
+  "معرف السجل",
+  "معرف الطالب",
+  "التاريخ",
+  "النوع",
+  "السورة",
+  "رقم السورة",
+  "من آية",
+  "إلى آية",
+  "عدد آيات السورة",
+  "نهاية السورة",
+  "التقييم",
+  "ملاحظات",
+  "آخر تحديث",
+];
 const CONFIG_HEADERS = ["المفتاح", "القيمة"];
 const PAYMENT_HEADERS = [
   "معرف الدفعة",
+  "رقم الدفعة",
   "التاريخ",
   "الفترة",
   "النوع",
   "الطلاب",
   "المبلغ الإجمالي",
+  "نصيب الفرد",
   "المجموعة",
   "ملاحظات",
   "آخر تحديث",
 ];
 
+// قائمة يدوية داخل Google Sheets لتشغيل إعداد الصفحات وتحديث التقارير يدوياً بدون إبطاء المزامنة
+function onOpen() {
+  try {
+    SpreadsheetApp.getUi()
+      .createMenu("🕌 دار الحافظ")
+      .addItem("⚙️ إعداد وتنسيق جميع الصفحات (يدوي)", "setupSpreadsheet")
+      .addItem("📊 تحديث لوحة التحكم وتفاصيل الطالب", "refreshReportsManual")
+      .addItem("👤 تحديث ملف الطالب المختار حالياً", "updateStudentDetails")
+      .addToUi();
+  } catch (_) {}
+}
+
+function refreshReportsManual() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  rebuildDashboard_();
+  try {
+    const detail = ss.getSheetByName(SHEETS.DETAIL);
+    if (detail) updateDetailSelector_(ss, detail);
+    updateStudentDetails();
+  } catch (_) {}
+  return { success: true, message: "تم تحديث لوحة التحكم وتفاصيل الطالب بنجاح" };
+}
+
 function doGet(e) {
   try {
     const action = String((e && e.parameter && e.parameter.action) || "ping");
+    const cb = e && e.parameter ? e.parameter.callback : "";
     if (action === "ping")
-      return json_(
-        { success: true, serverTime: new Date().toISOString() },
-        e.parameter.callback,
-      );
+      return json_({ success: true, serverTime: new Date().toISOString() }, cb);
     if (action === "sync")
-      return json_(
-        sync_(decodePayload_(e.parameter.payload || "")),
-        e.parameter.callback,
-      );
+      return json_(sync_(decodePayload_(e.parameter.payload || "")), cb);
     if (action === "pull")
-      return json_(pull_(e.parameter.since || ""), e.parameter.callback);
-    if (action === "fullPull") return json_(pull_(""), e.parameter.callback);
+      return json_(pull_(e.parameter.since || ""), cb);
+    if (action === "fullPull")
+      return json_(pull_(""), cb);
+    if (action === "setupSheets") {
+      setupSpreadsheet();
+      return json_({ success: true, serverTime: new Date().toISOString() }, cb);
+    }
+    if (action === "refreshReports") {
+      refreshReportsManual();
+      return json_({ success: true, serverTime: new Date().toISOString() }, cb);
+    }
     if (action === "clearRecords")
-      return json_(clearRecords_(), e.parameter.callback);
-    if (action === "clearAll") return json_(clearAll_(), e.parameter.callback);
-    return json_(
-      { success: false, message: "إجراء غير معروف" },
-      e.parameter.callback,
-    );
+      return json_(clearRecords_(), cb);
+    if (action === "clearPayments")
+      return json_(clearPayments_(), cb);
+    if (action === "clearWards")
+      return json_(clearWards_(), cb);
+    if (action === "clearAll")
+      return json_(clearAll_(), cb);
+    return json_({ success: false, message: "إجراء غير معروف" }, cb);
   } catch (err) {
     return json_(
       { success: false, message: String((err && err.message) || err) },
-      e.parameter.callback,
+      e && e.parameter ? e.parameter.callback : "",
     );
   }
 }
@@ -95,7 +144,15 @@ function doPost(e) {
     else if (action === "sync") result = sync_(body.payload || {});
     else if (action === "pull") result = pull_(body.since || "");
     else if (action === "fullPull") result = pull_("");
-    else if (action === "clearRecords") result = clearRecords_();
+    else if (action === "setupSheets") {
+      setupSpreadsheet();
+      result = { success: true, serverTime: new Date().toISOString() };
+    } else if (action === "refreshReports") {
+      refreshReportsManual();
+      result = { success: true, serverTime: new Date().toISOString() };
+    } else if (action === "clearRecords") result = clearRecords_();
+    else if (action === "clearPayments") result = clearPayments_();
+    else if (action === "clearWards") result = clearWards_();
     else if (action === "clearAll") result = clearAll_();
     else result = { success: false, message: "إجراء غير معروف" };
     return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(
@@ -111,17 +168,16 @@ function doPost(e) {
   }
 }
 
-// تحقق خفيف للاستخدام أثناء المزامنة: لا يعيد بناء لوحة التحكم أو يمسح تفاصيل الطالب.
-// التهيئة والترحيل الكاملان يظلان في setupSpreadsheet() للتشغيل اليدوي عند الحاجة.
+// فحص خفيف جداً أثناء المزامنة: يتأكد فقط من وجود شيتات البيانات الأساسية وعناوينها
+// دون أي عمليات تنسيق أو إعادة بناء للوحة التحكم أو تفاصيل الطالب.
 function ensureSyncSheets_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const required = [
     [SHEETS.STUDENTS, STUDENT_HEADERS],
     [SHEETS.RECORDS, RECORD_HEADERS],
     [SHEETS.PAYMENTS, PAYMENT_HEADERS],
-    [SHEETS.CONFIG, CONFIG_HEADERS],
+    [SHEETS.WARDS, WARD_HEADERS],
   ];
-  required.push([SHEETS.WARDS, WARD_HEADERS]);
   required.forEach(([name, headers]) => {
     let sh = ss.getSheetByName(name);
     if (!sh) {
@@ -130,26 +186,25 @@ function ensureSyncSheets_() {
       sh.setFrozenRows(1);
       return;
     }
-    // Add newly introduced columns by header name without overwriting existing rows.
+    const lastRow = sh.getLastRow();
+    if (lastRow === 0) {
+      sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sh.setFrozenRows(1);
+      return;
+    }
     const width = Math.max(sh.getLastColumn(), 1);
-    const existing = sh.getRange(1, 1, 1, width).getDisplayValues()[0].map(v => String(v || "").trim());
-    headers.forEach(header => {
-      if (existing.indexOf(header) === -1) {
-        const col = sh.getLastColumn() + 1;
-        sh.getRange(1, col).setValue(header);
-        existing.push(header);
-      }
-    });
-    sh.setFrozenRows(1);
+    const existing = sh
+      .getRange(1, 1, 1, width)
+      .getDisplayValues()[0]
+      .map((v) => String(v || "").trim());
+    const missing = headers.filter((h) => existing.indexOf(h) === -1);
+    if (missing.length) {
+      sh.getRange(1, width + 1, 1, missing.length).setValues([missing]);
+    }
   });
-  const config = ss.getSheetByName(SHEETS.CONFIG);
-  if (config.getLastRow() < 2)
-    config.getRange(2, 1, 1, 2).setValues([["التطبيق", "حضور وحفظ"]]);
-  try {
-    config.hideSheet();
-  } catch (_) {}
 }
 
+// الإعداد الكامل والترحيل والتنسيق — يُشغّل يدوياً فقط عند أول مرة أو عند طلب المستخدم
 function setupSpreadsheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   migrateOldSheet_(ss, OLD_SHEETS.STUDENTS, SHEETS.STUDENTS);
@@ -167,8 +222,10 @@ function setupSpreadsheet() {
   ensureSheet_(ss, SHEETS.WARDS, WARD_HEADERS);
   const config = ss.getSheetByName(SHEETS.CONFIG);
   if (config.getLastRow() < 2)
-    config.getRange(2, 1, 1, 2).setValues([["التطبيق", "حضور وحفظ"]]);
-  config.hideSheet();
+    config.getRange(2, 1, 1, 2).setValues([["التطبيق", "دار الحافظ"]]);
+  try {
+    config.hideSheet();
+  } catch (_) {}
   ensureDashboard_(ss);
   ensureDetail_(ss);
   formatBaseSheets_(ss);
@@ -187,14 +244,27 @@ function migrateOldSheet_(ss, oldName, newName) {
 
 function ensureSheet_(ss, name, headers) {
   let sh = ss.getSheetByName(name);
-  if (!sh) sh = ss.insertSheet(name);
-  sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+  if (!sh) {
+    sh = ss.insertSheet(name);
+    sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+    return sh;
+  }
+  if (sh.getLastRow() === 0) {
+    sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+    return sh;
+  }
+  const width = Math.max(sh.getLastColumn(), 1);
+  const existing = sh
+    .getRange(1, 1, 1, width)
+    .getDisplayValues()[0]
+    .map((v) => String(v || "").trim());
+  const missing = headers.filter((h) => existing.indexOf(h) === -1);
+  if (missing.length) {
+    sh.getRange(1, width + 1, 1, missing.length).setValues([missing]);
+  }
   return sh;
 }
 
-// ترحيل آمن لجدول الطلاب القديم إلى الشكل الجديد.
-// مهم: لا يعتمد على ترتيب الأعمدة؛ يعتمد على أسماء العناوين،
-// لذلك لا تتحرك بيانات المجموعة/الهاتف/آخر تحديث إلى أعمدة خاطئة.
 function migrateStudentsSchema_(ss) {
   const sh = ss.getSheetByName(SHEETS.STUDENTS);
   if (!sh || sh.getLastRow() < 1) return;
@@ -218,8 +288,6 @@ function migrateStudentsSchema_(ss) {
   const looksPhone = (v) =>
     /^0?1[0125]\d{8}$/.test(String(v == null ? "" : v).replace(/[ +()-]/g, ""));
 
-  // إصلاح النسخة التي ظهرت فيها المجموعة داخل عمود الهاتف/آخر تحديث.
-  // الشكل المتضرر: A=ID, B=الاسم, C=المجموعة(فارغة), D=الهاتف(فارغ), E=آخر تحديث لكن القيمة مجموعة.
   const hasExpectedNewHeaders = STUDENT_HEADERS.slice(0, 7).every(
     (h) => headers.indexOf(h) !== -1,
   );
@@ -264,10 +332,8 @@ function migrateStudentsSchema_(ss) {
     return;
   }
 
-  // إذا كان الشكل الجديد كاملًا، لا نعيد ترتيب البيانات.
   if (hasExpectedNewHeaders) return;
 
-  // الشكل القديم: المعرف، الاسم، المجموعة، الهاتف، آخر تحديث (+ أعمدة اختيارية).
   const normalized = headers;
   const oldIndex = {};
   normalized.forEach((h, i) => {
@@ -290,6 +356,7 @@ function migrateStudentsSchema_(ss) {
     updated: ["آخر تحديث", "Updated At", "updatedAt", "Last Updated"],
     days: ["الأيام", "Days", "days"],
     status: ["الحالة", "Status", "status"],
+    fee: ["المصروف الشهري", "Monthly Fee", "monthlyFee"],
   };
   const findIndex = (keys) => {
     for (const k of keys) if (oldIndex[k] !== undefined) return oldIndex[k];
@@ -305,6 +372,7 @@ function migrateStudentsSchema_(ss) {
     updated: findIndex(aliases.updated),
     days: findIndex(aliases.days),
     status: findIndex(aliases.status),
+    fee: findIndex(aliases.fee),
   };
   const valueAt = (row, i, def = "") =>
     i >= 0 && row[i] !== undefined && row[i] !== "" ? row[i] : def;
@@ -318,6 +386,7 @@ function migrateStudentsSchema_(ss) {
     valueAt(row, idx.updated),
     valueAt(row, idx.days, "[]"),
     valueAt(row, idx.status, "نشط"),
+    valueAt(row, idx.fee, ""),
   ]);
   sh.getRange(1, 1, 1, STUDENT_HEADERS.length).setValues([STUDENT_HEADERS]);
   if (migrated.length)
@@ -326,6 +395,71 @@ function migrateStudentsSchema_(ss) {
     );
 }
 
+// قراءة الجدول بالكامل في الذاكرة لسرعة التحديث والكتابة دفعة واحدة
+function readSheetDataInMemory_(sheet) {
+  const lastRow = sheet.getLastRow();
+  const lastCol = Math.max(sheet.getLastColumn(), 1);
+  if (lastRow < 1) {
+    return { headers: [], colMap: {}, rows: [], idToRowIdx: {} };
+  }
+  const allValues = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+  const headers = allValues[0].map((h) => String(h || "").trim());
+  const colMap = {};
+  headers.forEach((h, idx) => {
+    if (h && colMap[h] === undefined) colMap[h] = idx;
+  });
+  const rows = allValues.slice(1);
+  const idToRowIdx = {};
+  rows.forEach((r, idx) => {
+    const idVal = String(r[0] == null ? "" : r[0]).trim();
+    if (idVal) idToRowIdx[idVal] = idx;
+  });
+  return { headers, colMap, rows, idToRowIdx, lastCol };
+}
+
+function writeRowToMemory_(mem, rowIdx, headerValueMap) {
+  const row = mem.rows[rowIdx];
+  Object.keys(headerValueMap).forEach((h) => {
+    const cIdx = mem.colMap[h];
+    if (cIdx !== undefined) {
+      row[cIdx] = headerValueMap[h];
+    }
+  });
+}
+
+function buildNewRowForMemory_(mem, headerValueMap) {
+  const row = new Array(mem.lastCol).fill("");
+  Object.keys(headerValueMap).forEach((h) => {
+    const cIdx = mem.colMap[h];
+    if (cIdx !== undefined) {
+      row[cIdx] = headerValueMap[h];
+    }
+  });
+  return row;
+}
+
+function flushMemoryToSheet_(sheet, mem, hadDeletions, dirtyExisting, appendedRows) {
+  if (hadDeletions) {
+    const oldDataRows = Math.max(0, sheet.getLastRow() - 1);
+    if (oldDataRows > 0) {
+      sheet.getRange(2, 1, oldDataRows, mem.lastCol).clearContent();
+    }
+    const finalRows = mem.rows.concat(appendedRows);
+    if (finalRows.length > 0) {
+      sheet.getRange(2, 1, finalRows.length, mem.lastCol).setValues(finalRows);
+    }
+    return;
+  }
+  if (dirtyExisting && mem.rows.length > 0) {
+    sheet.getRange(2, 1, mem.rows.length, mem.lastCol).setValues(mem.rows);
+  }
+  if (appendedRows.length > 0) {
+    const startRow = mem.rows.length + 2;
+    sheet.getRange(startRow, 1, appendedRows.length, mem.lastCol).setValues(appendedRows);
+  }
+}
+
+// مزامنة فائقة السرعة: تضيف وتحدث وتحذف البيانات في الشيتات الأساسية مباشرة دفعة واحدة
 function sync_(payload) {
   ensureSyncSheets_();
   const lock = LockService.getScriptLock();
@@ -336,129 +470,310 @@ function sync_(payload) {
     const recordSheet = ss.getSheetByName(SHEETS.RECORDS);
     const paymentSheet = ss.getSheetByName(SHEETS.PAYMENTS);
     const wardSheet = ss.getSheetByName(SHEETS.WARDS);
+
     const students = Array.isArray(payload.students) ? payload.students : [];
     const records = Array.isArray(payload.records) ? payload.records : [];
-    const studentMap = readMap_(studentSheet, 1);
-    const recordMap = readMap_(recordSheet, 1);
-    const paymentMap = readMap_(paymentSheet, 1);
-    const wardMap = readMap_(wardSheet, 1);
     const payments = Array.isArray(payload.payments) ? payload.payments : [];
+    const deletedRecords = Array.isArray(payload.deletedRecords)
+      ? payload.deletedRecords.map(String)
+      : [];
+    const deletedPayments = Array.isArray(payload.deletedPayments)
+      ? payload.deletedPayments.map(String)
+      : [];
+    const deletedWards = Array.isArray(payload.deletedWards)
+      ? payload.deletedWards.map(String)
+      : [];
+
     let studentsChanged = 0,
       recordsChanged = 0,
       paymentsChanged = 0,
       wardsChanged = 0;
 
-    students.forEach((s) => {
-      if (!s || !s.id || !s.updatedAt) return;
-      const row = studentMap[String(s.id)];
-      const statusText = s.archived ? "مؤرشف" : "نشط";
-      const values = [
-        String(s.id),
-        String(s.name || ""),
-        s.age == null || s.age === "" ? "" : Number(s.age),
-        String(s.group || ""),
-        String(s.phone || ""),
-        String(s.guardianPhone || s.parentPhone || ""),
-        String(s.updatedAt),
-        JSON.stringify(Array.isArray(s.days) ? s.days.map(Number) : []),
-        statusText,
-      ];
-      if (row) {
-        const oldUpdatedAt = getCellByHeader_(studentSheet, row, "آخر تحديث");
-        if (String(oldUpdatedAt || "") < String(s.updatedAt)) {
-          writeRowByHeaders_(studentSheet, row, STUDENT_HEADERS, values);
+    // 1. مزامنة الطلاب في الذاكرة
+    if (students.length > 0) {
+      const sMem = readSheetDataInMemory_(studentSheet);
+      let sDirty = false;
+      const sAppended = [];
+      const updCol = sMem.colMap["آخر تحديث"];
+      const feeCol = sMem.colMap["المصروف الشهري"];
+
+      students.forEach((s) => {
+        if (!s || !s.id || !s.updatedAt) return;
+        const id = String(s.id);
+        const rIdx = sMem.idToRowIdx[id];
+        const statusText = s.archived ? "مؤرشف" : "نشط";
+        const existingFee =
+          rIdx !== undefined && feeCol !== undefined ? sMem.rows[rIdx][feeCol] : "";
+        const feeValue =
+          s.monthlyFee !== undefined && s.monthlyFee !== null && s.monthlyFee !== ""
+            ? Number(s.monthlyFee)
+            : existingFee !== "" && existingFee != null
+              ? Number(existingFee)
+              : "";
+        const rowObj = {
+          "المعرف": id,
+          "الاسم": String(s.name || ""),
+          "العمر": s.age == null || s.age === "" ? "" : Number(s.age),
+          "المجموعة": String(s.group || ""),
+          "الهاتف": String(s.phone || ""),
+          "هاتف ولي الأمر": String(s.guardianPhone || s.parentPhone || ""),
+          "آخر تحديث": String(s.updatedAt),
+          "الأيام": JSON.stringify(Array.isArray(s.days) ? s.days.map(Number) : []),
+          "الحالة": statusText,
+          "المصروف الشهري": feeValue,
+        };
+        if (rIdx !== undefined) {
+          const oldUpd = updCol !== undefined ? sMem.rows[rIdx][updCol] : "";
+          if (isIncomingNewer_(oldUpd, s.updatedAt)) {
+            writeRowToMemory_(sMem, rIdx, rowObj);
+            sDirty = true;
+            studentsChanged++;
+          }
+        } else {
+          const newRow = buildNewRowForMemory_(sMem, rowObj);
+          sMem.idToRowIdx[id] = sMem.rows.length + sAppended.length;
+          sAppended.push(newRow);
           studentsChanged++;
         }
-      } else {
-        appendRowByHeaders_(studentSheet, STUDENT_HEADERS, values);
-        studentsChanged++;
-      }
-    });
+      });
+      flushMemoryToSheet_(studentSheet, sMem, false, sDirty, sAppended);
+    }
 
-    records.forEach((r) => {
-      if (!r || !r.id || !r.updatedAt || !r.studentId || !r.date) return;
-      const row = recordMap[String(r.id)];
-      const status =
-        String(r.status || "").toLowerCase() === "absent" ||
-        String(r.status) === "غائب"
-          ? "غائب"
-          : "حاضر";
-      const values = [
-        String(r.id),
-        String(r.date),
-        String(r.studentId),
-        status,
-        r.memory == null ? "" : Number(r.memory),
-        String(r.updatedAt),
-        JSON.stringify(Array.isArray(r.memorizationWards) ? r.memorizationWards : []),
-      ];
-      if (row) {
-        const oldUpdatedAt = getCellByHeader_(recordSheet, row, "آخر تحديث");
-        if (String(oldUpdatedAt || "") < String(r.updatedAt)) {
-          writeRowByHeaders_(recordSheet, row, RECORD_HEADERS, values);
+    // 2. مزامنة السجلات وحذف السجلات الملغاة
+    if (records.length > 0 || deletedRecords.length > 0) {
+      const rMem = readSheetDataInMemory_(recordSheet);
+      let rDirty = false;
+      let rHadDeletions = false;
+      const rAppended = [];
+      const updCol = rMem.colMap["آخر تحديث"];
+
+      if (deletedRecords.length > 0) {
+        const delSet = {};
+        deletedRecords.forEach((id) => (delSet[String(id)] = true));
+        const beforeLen = rMem.rows.length;
+        rMem.rows = rMem.rows.filter(
+          (row) => !delSet[String(row[0] == null ? "" : row[0]).trim()],
+        );
+        if (rMem.rows.length !== beforeLen) {
+          rHadDeletions = true;
+          rMem.idToRowIdx = {};
+          rMem.rows.forEach((r, idx) => {
+            const k = String(r[0] == null ? "" : r[0]).trim();
+            if (k) rMem.idToRowIdx[k] = idx;
+          });
+        }
+      }
+
+      records.forEach((r) => {
+        if (!r || !r.id || !r.updatedAt || !r.studentId || !r.date) return;
+        const id = String(r.id);
+        const rIdx = rMem.idToRowIdx[id];
+        const status =
+          String(r.status || "").toLowerCase() === "absent" ||
+          String(r.status) === "غائب"
+            ? "غائب"
+            : "حاضر";
+        const rowObj = {
+          "معرف السجل": id,
+          "التاريخ": String(r.date),
+          "معرف الطالب": String(r.studentId),
+          "الحالة": status,
+          "الحفظ": r.memory == null || r.memory === "" ? "" : Number(r.memory),
+          "آخر تحديث": String(r.updatedAt),
+          "أوراد الحفظ": JSON.stringify(
+            Array.isArray(r.memorizationWards) ? r.memorizationWards : [],
+          ),
+        };
+        if (rIdx !== undefined) {
+          const oldUpd = updCol !== undefined ? rMem.rows[rIdx][updCol] : "";
+          if (isIncomingNewer_(oldUpd, r.updatedAt)) {
+            writeRowToMemory_(rMem, rIdx, rowObj);
+            rDirty = true;
+            recordsChanged++;
+          }
+        } else {
+          const newRow = buildNewRowForMemory_(rMem, rowObj);
+          rMem.idToRowIdx[id] = rMem.rows.length + rAppended.length;
+          rAppended.push(newRow);
           recordsChanged++;
         }
-      } else {
-        appendRowByHeaders_(recordSheet, RECORD_HEADERS, values);
-        recordsChanged++;
-      }
-    });
-
-    records.forEach((r) => {
-      if (!r || !r.id || !r.studentId || !r.date) return;
-      (Array.isArray(r.memorizationWards) ? r.memorizationWards : []).forEach((w, index) => {
-        if (!w) return;
-        const wardId = String(w.id || (String(r.id) + "-ward-" + index));
-        const row = wardMap[wardId];
-        const values = [wardId, String(r.id), String(r.studentId), String(r.date), String(w.type || ""), String(w.surah || ""), Number(w.surahNo || 0), Number(w.from || 0), Number(w.to || 0), Number(w.ayahCount || 0), w.endsSurah === true || String(w.endsSurah) === "TRUE", String(w.rating || ""), String(w.notes || ""), String(r.updatedAt || "")];
-        if (row) {
-          const oldUpdatedAt = getCellByHeader_(wardSheet, row, "آخر تحديث");
-          if (String(oldUpdatedAt || "") < String(r.updatedAt || "")) { writeRowByHeaders_(wardSheet, row, WARD_HEADERS, values); wardsChanged++; }
-        } else { appendRowByHeaders_(wardSheet, WARD_HEADERS, values); wardsChanged++; }
       });
-    });
+      flushMemoryToSheet_(recordSheet, rMem, rHadDeletions, rDirty, rAppended);
+    }
 
-    payments.forEach((p) => {
-      if (!p || !p.id || !p.updatedAt) return;
-      const studentIds =
-        Array.isArray(p.studentIds) && p.studentIds.length
-          ? p.studentIds.map(String)
-          : p.studentId
-            ? [String(p.studentId)]
-            : [];
-      if (!studentIds.length) return;
-      const type =
-        p.type === "shared" || studentIds.length > 1 ? "shared" : "single";
-      const totalAmount =
-        p.totalAmount != null && p.totalAmount !== ""
-          ? Number(p.totalAmount)
-          : Number(p.amount || 0);
-      const notes = p.notes != null ? String(p.notes) : String(p.note || "");
-      const row = paymentMap[String(p.id)];
-      const values = [
-        String(p.id),
-        String(p.date || ""),
-        String(p.period || ""),
-        type,
-        studentIds.join(","),
-        Number.isFinite(totalAmount) ? totalAmount : 0,
-        String(p.group || ""),
-        notes,
-        String(p.updatedAt),
-      ];
-      if (row) {
-        const oldUpdatedAt = getCellByHeader_(paymentSheet, row, "آخر تحديث");
-        if (String(oldUpdatedAt || "") < String(p.updatedAt)) {
-          writeRowByHeaders_(paymentSheet, row, PAYMENT_HEADERS, values);
+    // 3. مزامنة أوراد الحفظ وتنظيف الأوراد المحذوفة تلقائياً
+    if (records.length > 0 || deletedRecords.length > 0 || deletedWards.length > 0) {
+      const wMem = readSheetDataInMemory_(wardSheet);
+      let wDirty = false;
+      let wHadDeletions = false;
+      const wAppended = [];
+      const recIdCol = wMem.colMap["معرف السجل"] !== undefined ? wMem.colMap["معرف السجل"] : 1;
+      const updCol = wMem.colMap["آخر تحديث"];
+
+      // بناء خريطة بالأوراد النشطة لكل سجل مرسل، وحذف أي ورد يتيم حُذف من السجل
+      const syncedRecordAllowedWards = {};
+      records.forEach((r) => {
+        if (!r || !r.id) return;
+        const allowed = {};
+        (Array.isArray(r.memorizationWards) ? r.memorizationWards : []).forEach(
+          (w, index) => {
+            if (!w) return;
+            const wardId = String(w.id || String(r.id) + "-ward-" + index);
+            allowed[wardId] = true;
+          },
+        );
+        syncedRecordAllowedWards[String(r.id)] = allowed;
+      });
+      const delRecSet = {};
+      deletedRecords.forEach((id) => (delRecSet[String(id)] = true));
+      const delWardSet = {};
+      deletedWards.forEach((id) => (delWardSet[String(id)] = true));
+
+      const beforeWLen = wMem.rows.length;
+      wMem.rows = wMem.rows.filter((row) => {
+        const wId = String(row[0] == null ? "" : row[0]).trim();
+        const rId = String(row[recIdCol] == null ? "" : row[recIdCol]).trim();
+        if (delWardSet[wId] || delRecSet[rId]) return false;
+        if (syncedRecordAllowedWards[rId] !== undefined) {
+          return Boolean(syncedRecordAllowedWards[rId][wId]);
+        }
+        return true;
+      });
+      if (wMem.rows.length !== beforeWLen) {
+        wHadDeletions = true;
+        wMem.idToRowIdx = {};
+        wMem.rows.forEach((r, idx) => {
+          const k = String(r[0] == null ? "" : r[0]).trim();
+          if (k) wMem.idToRowIdx[k] = idx;
+        });
+      }
+
+      records.forEach((r) => {
+        if (!r || !r.id || !r.studentId || !r.date) return;
+        (Array.isArray(r.memorizationWards) ? r.memorizationWards : []).forEach(
+          (w, index) => {
+            if (!w) return;
+            const wardId = String(w.id || String(r.id) + "-ward-" + index);
+            const rIdx = wMem.idToRowIdx[wardId];
+            const rowObj = {
+              "معرف الورد": wardId,
+              "معرف السجل": String(r.id),
+              "معرف الطالب": String(r.studentId),
+              "التاريخ": String(r.date),
+              "النوع": String(w.type || ""),
+              "السورة": String(w.surah || ""),
+              "رقم السورة": Number(w.surahNo || 0),
+              "من آية": Number(w.from || w.fromAyah || 0),
+              "إلى آية": Number(w.to || w.toAyah || 0),
+              "عدد آيات السورة": Number(w.ayahCount || 0),
+              "نهاية السورة": w.endsSurah === true || String(w.endsSurah) === "TRUE",
+              "التقييم": String(w.rating || ""),
+              "ملاحظات": String(w.notes || ""),
+              "آخر تحديث": String(r.updatedAt || ""),
+            };
+            if (rIdx !== undefined) {
+              const oldUpd = updCol !== undefined ? wMem.rows[rIdx][updCol] : "";
+              if (isIncomingNewer_(oldUpd, r.updatedAt)) {
+                writeRowToMemory_(wMem, rIdx, rowObj);
+                wDirty = true;
+                wardsChanged++;
+              }
+            } else {
+              const newRow = buildNewRowForMemory_(wMem, rowObj);
+              wMem.idToRowIdx[wardId] = wMem.rows.length + wAppended.length;
+              wAppended.push(newRow);
+              wardsChanged++;
+            }
+          },
+        );
+      });
+      flushMemoryToSheet_(wardSheet, wMem, wHadDeletions, wDirty, wAppended);
+    }
+
+    // 4. مزامنة المدفوعات (مع دعم رقم الدفعة المشتركة ونصيب الفرد وحذف الدفعات الملغاة)
+    if (payments.length > 0 || deletedPayments.length > 0) {
+      const pMem = readSheetDataInMemory_(paymentSheet);
+      let pDirty = false;
+      let pHadDeletions = false;
+      const pAppended = [];
+      const updCol = pMem.colMap["آخر تحديث"];
+
+      if (deletedPayments.length > 0) {
+        const delSet = {};
+        deletedPayments.forEach((id) => (delSet[String(id)] = true));
+        const beforeLen = pMem.rows.length;
+        pMem.rows = pMem.rows.filter(
+          (row) => !delSet[String(row[0] == null ? "" : row[0]).trim()],
+        );
+        if (pMem.rows.length !== beforeLen) {
+          pHadDeletions = true;
+          pMem.idToRowIdx = {};
+          pMem.rows.forEach((r, idx) => {
+            const k = String(r[0] == null ? "" : r[0]).trim();
+            if (k) pMem.idToRowIdx[k] = idx;
+          });
+        }
+      }
+
+      payments.forEach((p) => {
+        if (!p || !p.id || !p.updatedAt) return;
+        const studentIds =
+          Array.isArray(p.studentIds) && p.studentIds.length
+            ? p.studentIds.map(String)
+            : p.studentId
+              ? [String(p.studentId)]
+              : [];
+        if (!studentIds.length) return;
+        const isShared = p.type === "shared" || studentIds.length > 1;
+        const type = isShared ? "shared" : "single";
+        const totalAmount =
+          p.totalAmount != null && p.totalAmount !== ""
+            ? Number(p.totalAmount)
+            : Number(p.amount || 0);
+        const safeTotal = Number.isFinite(totalAmount) ? totalAmount : 0;
+        const shareAmount =
+          studentIds.length > 0
+            ? Math.round((safeTotal / studentIds.length) * 100) / 100
+            : safeTotal;
+        const paymentCode = String(
+          p.paymentCode ||
+            (isShared
+              ? "SH-" + String(p.id).replace(/[^0-9A-Za-z]/g, "").slice(0, 6).toUpperCase()
+              : ""),
+        ).trim();
+        const notes = p.notes != null ? String(p.notes) : String(p.note || "");
+        const id = String(p.id);
+        const rIdx = pMem.idToRowIdx[id];
+        const rowObj = {
+          "معرف الدفعة": id,
+          "رقم الدفعة": paymentCode,
+          "التاريخ": String(p.date || ""),
+          "الفترة": String(p.period || ""),
+          "النوع": type,
+          "الطلاب": studentIds.join(","),
+          "المبلغ الإجمالي": safeTotal,
+          "نصيب الفرد": shareAmount,
+          "المجموعة": String(p.group || ""),
+          "ملاحظات": notes,
+          "آخر تحديث": String(p.updatedAt),
+        };
+        if (rIdx !== undefined) {
+          const oldUpd = updCol !== undefined ? pMem.rows[rIdx][updCol] : "";
+          if (isIncomingNewer_(oldUpd, p.updatedAt)) {
+            writeRowToMemory_(pMem, rIdx, rowObj);
+            pDirty = true;
+            paymentsChanged++;
+          }
+        } else {
+          const newRow = buildNewRowForMemory_(pMem, rowObj);
+          pMem.idToRowIdx[id] = pMem.rows.length + pAppended.length;
+          pAppended.push(newRow);
           paymentsChanged++;
         }
-      } else {
-        appendRowByHeaders_(paymentSheet, PAYMENT_HEADERS, values);
-        paymentsChanged++;
-      }
-    });
-    rebuildDashboard_();
-    try { updateStudentDetails(); } catch (_) {}
+      });
+      flushMemoryToSheet_(paymentSheet, pMem, pHadDeletions, pDirty, pAppended);
+    }
+
     return {
       success: true,
       studentsChanged,
@@ -472,8 +787,9 @@ function sync_(payload) {
   }
 }
 
+// حذف سجل الحضور فقط (مع الحفاظ على بيانات الطلاب الأساسية والمدفوعات والأوراد المستقلة)
 function clearRecords_() {
-  setupSpreadsheet();
+  ensureSyncSheets_();
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
@@ -481,22 +797,68 @@ function clearRecords_() {
     const sh = ss.getSheetByName(SHEETS.RECORDS);
     if (sh && sh.getLastRow() > 1)
       sh.getRange(2, 1, sh.getLastRow() - 1, sh.getLastColumn()).clearContent();
-    const wards = ss.getSheetByName(SHEETS.WARDS);
-    if (wards && wards.getLastRow() > 1) wards.getRange(2, 1, wards.getLastRow() - 1, wards.getLastColumn()).clearContent();
     const cfg = ss.getSheetByName(SHEETS.CONFIG);
     if (cfg)
       cfg.getRange("D1:E2").setValues([
         ["آخر حذف", "النوع"],
-        [new Date().toISOString(), "سجل الحضور"],
+        [new Date().toISOString(), "سجل الحضور فقط"],
       ]);
-    rebuildDashboard_();
-    const detail = ss.getSheetByName(SHEETS.DETAIL);
-    if (detail) {
-      detail.getRange("B3").clearContent();
-      detail.getRange("B5:B10").clearContent();
-      detail.getRange("A14:D1000").clearContent();
-      updateDetailSelector_(ss, detail);
+    return { success: true, serverTime: new Date().toISOString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// حذف المدفوعات فقط (مع الحفاظ على بيانات الطلاب الأساسية والسجلات والأوراد)
+function clearPayments_() {
+  ensureSyncSheets_();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sh = ss.getSheetByName(SHEETS.PAYMENTS);
+    if (sh && sh.getLastRow() > 1)
+      sh.getRange(2, 1, sh.getLastRow() - 1, sh.getLastColumn()).clearContent();
+    const cfg = ss.getSheetByName(SHEETS.CONFIG);
+    if (cfg)
+      cfg.getRange("D1:E2").setValues([
+        ["آخر حذف", "النوع"],
+        [new Date().toISOString(), "سجل المدفوعات فقط"],
+      ]);
+    return { success: true, serverTime: new Date().toISOString() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// حذف الأوراد فقط (مع الحفاظ على بيانات الطلاب الأساسية وحضورهم ومدفوعاتهم)
+function clearWards_() {
+  ensureSyncSheets_();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const wards = ss.getSheetByName(SHEETS.WARDS);
+    if (wards && wards.getLastRow() > 1)
+      wards.getRange(2, 1, wards.getLastRow() - 1, wards.getLastColumn()).clearContent();
+
+    // تفريغ عمود أوراد الحفظ داخل شيت السجلات مع الإبقاء على سجلات الحضور والغياب
+    const recSheet = ss.getSheetByName(SHEETS.RECORDS);
+    if (recSheet && recSheet.getLastRow() > 1) {
+      const hMap = headerMap_(recSheet);
+      const wardsCol = hMap["أوراد الحفظ"];
+      if (wardsCol) {
+        const numRows = recSheet.getLastRow() - 1;
+        const emptyWards = Array.from({ length: numRows }, () => ["[]"]);
+        recSheet.getRange(2, wardsCol, numRows, 1).setValues(emptyWards);
+      }
     }
+    const cfg = ss.getSheetByName(SHEETS.CONFIG);
+    if (cfg)
+      cfg.getRange("D1:E2").setValues([
+        ["آخر حذف", "النوع"],
+        [new Date().toISOString(), "سجل الأوراد فقط"],
+      ]);
     return { success: true, serverTime: new Date().toISOString() };
   } finally {
     lock.releaseLock();
@@ -504,35 +866,16 @@ function clearRecords_() {
 }
 
 function clearAll_() {
-  setupSpreadsheet();
+  ensureSyncSheets_();
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    [SHEETS.STUDENTS, SHEETS.RECORDS, SHEETS.PAYMENTS, SHEETS.WARDS].forEach((name) => {
+    [SHEETS.RECORDS, SHEETS.PAYMENTS, SHEETS.WARDS].forEach((name) => {
       const sh = ss.getSheetByName(name);
       if (sh && sh.getLastRow() > 1)
-        sh.getRange(
-          2,
-          1,
-          sh.getLastRow() - 1,
-          sh.getLastColumn(),
-        ).clearContent();
+        sh.getRange(2, 1, sh.getLastRow() - 1, sh.getLastColumn()).clearContent();
     });
-    const cfg = ss.getSheetByName(SHEETS.CONFIG);
-    if (cfg)
-      cfg.getRange("D1:E2").setValues([
-        ["آخر حذف", "النوع"],
-        [new Date().toISOString(), "كل البيانات"],
-      ]);
-    rebuildDashboard_();
-    const detail = ss.getSheetByName(SHEETS.DETAIL);
-    if (detail) {
-      detail.getRange("B3").clearContent();
-      detail.getRange("B5:B10").clearContent();
-      detail.getRange("A14:D1000").clearContent();
-      updateDetailSelector_(ss, detail);
-    }
     return { success: true, serverTime: new Date().toISOString() };
   } finally {
     lock.releaseLock();
@@ -563,6 +906,17 @@ function normalizeTimestamp_(v) {
   return isNaN(d.getTime()) ? s : d.toISOString();
 }
 
+function isIncomingNewer_(oldVal, newVal) {
+  const oldIso = normalizeTimestamp_(oldVal);
+  const newIso = normalizeTimestamp_(newVal);
+  if (!oldIso) return true;
+  if (!newIso) return false;
+  const oldMs = new Date(oldIso).getTime();
+  const newMs = new Date(newIso).getTime();
+  if (!isNaN(oldMs) && !isNaN(newMs)) return newMs >= oldMs;
+  return newIso >= oldIso;
+}
+
 function pull_(since) {
   ensureSyncSheets_();
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -590,6 +944,10 @@ function pull_(since) {
         }
       })(),
       archived: String(x["الحالة"] || "").trim() === "مؤرشف",
+      monthlyFee:
+        x["المصروف الشهري"] === "" || x["المصروف الشهري"] == null
+          ? null
+          : Number(x["المصروف الشهري"]),
     }));
   const records = rowsToObjects_(
     ss.getSheetByName(SHEETS.RECORDS),
@@ -605,7 +963,14 @@ function pull_(since) {
       status: String(x["الحالة"] || "") === "غائب" ? "absent" : "present",
       memory:
         x["الحفظ"] === "" || x["الحفظ"] == null ? null : Number(x["الحفظ"]),
-      memorizationWards: (function(){try{const v=JSON.parse(String(x["أوراد الحفظ"]||"[]"));return Array.isArray(v)?v:[];}catch(e){return [];}})(),
+      memorizationWards: (function () {
+        try {
+          const v = JSON.parse(String(x["أوراد الحفظ"] || "[]"));
+          return Array.isArray(v) ? v : [];
+        } catch (e) {
+          return [];
+        }
+      })(),
       updatedAt: normalizeTimestamp_(x["آخر تحديث"]),
     }));
   const payments = rowsToObjects_(
@@ -615,20 +980,32 @@ function pull_(since) {
     .filter(
       (x) => !since || normalizeTimestamp_(x["آخر تحديث"]) > String(since),
     )
-    .map((x) => ({
-      id: String(x["معرف الدفعة"]),
-      date: normalizeDate_(x["التاريخ"]),
-      period: String(x["الفترة"] || ""),
-      type: String(x["النوع"] || "single"),
-      studentIds: String(x["الطلاب"] || "")
+    .map((x) => {
+      const sIds = String(x["الطلاب"] || "")
         .split(",")
         .map((v) => v.trim())
-        .filter(Boolean),
-      totalAmount: Number(x["المبلغ الإجمالي"] || 0),
-      group: String(x["المجموعة"] || ""),
-      notes: String(x["ملاحظات"] || ""),
-      updatedAt: normalizeTimestamp_(x["آخر تحديث"]),
-    }));
+        .filter(Boolean);
+      const tot = Number(x["المبلغ الإجمالي"] || 0);
+      const isSh = String(x["النوع"] || "single") === "shared" || sIds.length > 1;
+      return {
+        id: String(x["معرف الدفعة"]),
+        paymentCode: String(x["رقم الدفعة"] || ""),
+        date: normalizeDate_(x["التاريخ"]),
+        period: String(x["الفترة"] || ""),
+        type: isSh ? "shared" : "single",
+        studentIds: sIds,
+        totalAmount: tot,
+        shareAmount:
+          x["نصيب الفرد"] !== "" && x["نصيب الفرد"] != null
+            ? Number(x["نصيب الفرد"])
+            : sIds.length > 0
+              ? Math.round((tot / sIds.length) * 100) / 100
+              : tot,
+        group: String(x["المجموعة"] || ""),
+        notes: String(x["ملاحظات"] || ""),
+        updatedAt: normalizeTimestamp_(x["آخر تحديث"]),
+      };
+    });
   return {
     success: true,
     students,
@@ -642,10 +1019,12 @@ function ensureDashboard_(ss) {
   let sh = ss.getSheetByName(SHEETS.DASHBOARD);
   if (!sh) sh = ss.insertSheet(SHEETS.DASHBOARD);
   sh.clear();
-  sh.getRange("A1:M1").merge().setValue("📊 لوحة متابعة الطلاب");
+  sh.getRange("A1:N1").merge().setValue("📊 لوحة متابعة الطلاب — دار الحافظ");
   sh.getRange("A1").setFontSize(18).setFontWeight("bold");
-  sh.getRange("A2").setValue("تتحدث تلقائيًا من الطلاب والسجلات بعد المزامنة");
-  sh.getRange("A4:M4").setValues([
+  sh.getRange("A2").setValue(
+    "لتحديث هذه اللوحة يدوياً: افتح قائمة «🕌 دار الحافظ» بالأعلى واختر «تحديث لوحة التحكم»",
+  );
+  sh.getRange("A4:N4").setValues([
     [
       "المعرف",
       "الطالب",
@@ -660,18 +1039,20 @@ function ensureDashboard_(ss) {
       "إجمالي الأوراد",
       "حفظ جديد",
       "مراجعة",
+      "إجمالي نصيب المدفوعات",
     ],
   ]);
-  sh.getRange("A4:M4").setFontWeight("bold");
+  sh.getRange("A4:N4").setFontWeight("bold");
   sh.setFrozenRows(4);
   if (sh.getFilter()) sh.getFilter().remove();
-  sh.getRange("A4:M4").createFilter();
+  sh.getRange("A4:N4").createFilter();
 }
 
 function rebuildDashboard_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const students = ss.getSheetByName(SHEETS.STUDENTS);
   const records = ss.getSheetByName(SHEETS.RECORDS);
+  const payments = ss.getSheetByName(SHEETS.PAYMENTS);
   if (!students || !records) return;
   let dash = ss.getSheetByName(SHEETS.DASHBOARD);
   if (!dash) {
@@ -680,12 +1061,28 @@ function rebuildDashboard_() {
   }
   if (dash.getFilter()) dash.getFilter().remove();
   if (dash.getMaxRows() > 4)
-    dash.getRange(5, 1, dash.getMaxRows() - 4, 13).clearContent();
+    dash.getRange(5, 1, dash.getMaxRows() - 4, 14).clearContent();
 
   const studentRows = rowsToObjects_(students, STUDENT_HEADERS).filter(
     (s) => String(s["الحالة"] || "").trim() !== "مؤرشف",
   );
   const recordRows = rowsToObjects_(records, RECORD_HEADERS);
+  const paymentRows = payments ? rowsToObjects_(payments, PAYMENT_HEADERS) : [];
+
+  const paidByStudent = {};
+  paymentRows.forEach((p) => {
+    const ids = String(p["الطلاب"] || "")
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
+    if (!ids.length) return;
+    const total = Number(p["المبلغ الإجمالي"] || 0) || 0;
+    const share = total / ids.length;
+    ids.forEach((id) => {
+      paidByStudent[id] = (paidByStudent[id] || 0) + share;
+    });
+  });
+
   const byStudent = {};
   recordRows.forEach((r) => {
     const id = String(r["معرف الطالب"] || "");
@@ -699,20 +1096,31 @@ function rebuildDashboard_() {
     const rs = byStudent[id] || [];
     const present = rs.filter((r) => statusPresent_(r["الحالة"])).length;
     const absent = rs.filter((r) => statusAbsent_(r["الحالة"])).length;
-    const memories = rs.map((r) => Number(r["الحفظ"])).filter((n) => !isNaN(n));
+    const memories = rs
+      .filter((r) => r["الحفظ"] !== "" && r["الحفظ"] != null)
+      .map((r) => Number(r["الحفظ"]))
+      .filter((n) => !isNaN(n));
     const avg = memories.length
       ? memories.reduce((a, b) => a + b, 0) / memories.length
       : "";
     const best = memories.length ? Math.max.apply(null, memories) : "";
     const worst = memories.length ? Math.min.apply(null, memories) : "";
-    const wards = rs.flatMap(r => { try { const v = JSON.parse(String(r["أوراد الحفظ"] || "[]")); return Array.isArray(v) ? v : []; } catch (_) { return []; } });
-    const newWards = wards.filter(w => w.type === "new").length;
-    const reviewWards = wards.filter(w => w.type === "review").length;
+    const wards = rs.flatMap((r) => {
+      try {
+        const v = JSON.parse(String(r["أوراد الحفظ"] || "[]"));
+        return Array.isArray(v) ? v : [];
+      } catch (_) {
+        return [];
+      }
+    });
+    const newWards = wards.filter((w) => w.type === "new").length;
+    const reviewWards = wards.filter((w) => w.type === "review").length;
     const dates = rs
       .map((r) => String(r["التاريخ"] || ""))
       .filter(Boolean)
       .sort();
     const total = present + absent;
+    const paidShare = Math.round((paidByStudent[id] || 0) * 100) / 100;
     return [
       id,
       String(s["الاسم"] || ""),
@@ -727,38 +1135,53 @@ function rebuildDashboard_() {
       wards.length,
       newWards,
       reviewWards,
+      paidShare,
     ];
   });
-  if (out.length) dash.getRange(5, 1, out.length, 13).setValues(out);
   if (out.length) {
+    dash.getRange(5, 1, out.length, 14).setValues(out);
     dash.getRange(5, 6, out.length, 1).setNumberFormat("0.0%");
     dash.getRange(5, 7, out.length, 3).setNumberFormat("0.##");
+    dash.getRange(5, 14, out.length, 1).setNumberFormat("#,##0.00");
   }
-  dash.getRange("A4:M4").createFilter();
-  dash.autoResizeColumns(1, 13);
+  dash.getRange("A4:N4").createFilter();
   dash.setFrozenRows(4);
 }
 
 function ensureDetail_(ss) {
   let sh = ss.getSheetByName(SHEETS.DETAIL);
   if (!sh) sh = ss.insertSheet(SHEETS.DETAIL);
-  // هذه ورقة تقرير مشتقة من البيانات وليست مصدرًا للبيانات الأصلية.
   sh.clear();
   sh.setRightToLeft(true);
-  sh.getRange("A1:H1").merge().setValue("👤 الملف الشامل للطالب | دار الحافظ");
-  sh.getRange("A1:H1").setBackground("#173f35").setFontColor("#ffffff").setFontSize(17).setFontWeight("bold").setHorizontalAlignment("center").setVerticalAlignment("middle");
+  sh.getRange("A1:H1").merge().setValue("👤 الملف الشامل للطالب وبحث الدفعات المشتركة | دار الحافظ");
+  sh.getRange("A1:H1")
+    .setBackground("#173f35")
+    .setFontColor("#ffffff")
+    .setFontSize(17)
+    .setFontWeight("bold")
+    .setHorizontalAlignment("center")
+    .setVerticalAlignment("middle");
   sh.setRowHeight(1, 42);
-  sh.getRange("A3").setValue("اختيار الطالب").setFontWeight("bold");
+  sh.getRange("A3").setValue("اختيار الطالب أو رقم الدفعة").setFontWeight("bold");
   sh.getRange("B3:D3").merge().setValue("").setBackground("#fff4d6").setFontWeight("bold");
-  sh.getRange("E3:H3").merge().setValue("اختر الطالب من القائمة لتحديث الملف والإحصائيات").setFontColor("#587168");
+  sh.getRange("E3:H3")
+    .merge()
+    .setValue("اختر الطالب من القائمة أو اكتب رقم دفعة مشتركة (مثل SH-1001) للبحث عنها")
+    .setFontColor("#587168");
 
   sh.getRange("A5:D5").merge().setValue("بيانات الطالب");
   sh.getRange("A5:D5").setBackground("#dce9df").setFontWeight("bold");
   sh.getRange("A6:B9").setValues([
-    ["الاسم", ""], ["المعرف", ""], ["المجموعة", ""], ["العمر", ""]
+    ["الاسم", ""],
+    ["المعرف", ""],
+    ["المجموعة", ""],
+    ["العمر", ""],
   ]);
   sh.getRange("C6:D9").setValues([
-    ["الهاتف", ""], ["هاتف ولي الأمر", ""], ["الحالة", ""], ["آخر تحديث", ""]
+    ["الهاتف", ""],
+    ["هاتف ولي الأمر", ""],
+    ["الحالة", ""],
+    ["المصروف الشهري", ""],
   ]);
   sh.getRange("A6:A9").setFontWeight("bold");
   sh.getRange("C6:C9").setFontWeight("bold");
@@ -766,21 +1189,31 @@ function ensureDetail_(ss) {
   sh.getRange("E5:H5").merge().setValue("ملخص الحضور والحفظ");
   sh.getRange("E5:H5").setBackground("#dce9df").setFontWeight("bold");
   sh.getRange("E6:F9").setValues([
-    ["أيام الحضور", ""], ["أيام الغياب", ""], ["نسبة الحضور", ""], ["متوسط درجة الحفظ", ""]
+    ["أيام الحضور", ""],
+    ["أيام الغياب", ""],
+    ["نسبة الحضور", ""],
+    ["متوسط درجة الحفظ", ""],
   ]);
   sh.getRange("G6:H9").setValues([
-    ["إجمالي الأوراد", ""], ["حفظ جديد", ""], ["مراجعة", ""], ["تثبيت", ""]
+    ["إجمالي الأوراد", ""],
+    ["حفظ جديد", ""],
+    ["مراجعة", ""],
+    ["تثبيت", ""],
   ]);
   sh.getRange("E6:E9").setFontWeight("bold");
   sh.getRange("G6:G9").setFontWeight("bold");
 
-  sh.getRange("A11:H11").merge().setValue("📖 تقدم الحفظ والتسميع");
+  sh.getRange("A11:H11").merge().setValue("📖 تقدم الحفظ والمدفوعات (تُقسم الدفعة المشتركة على الأعضاء)");
   sh.getRange("A11:H11").setBackground("#173f35").setFontColor("#ffffff").setFontWeight("bold");
-  sh.getRange("A12:H12").setValues([["متوسط تقييم الأوراد", "", "السور المختلفة", "", "آخر ورد", "", "المدفوعات المسجلة", ""]]);
+  sh.getRange("A12:H12").setValues([
+    ["متوسط تقييم الأوراد", "", "السور المختلفة", "", "آخر ورد", "", "إجمالي نصيب المدفوعات", ""],
+  ]);
   sh.getRange("A12:H12").setFontWeight("bold").setBackground("#f5f0e4");
-  sh.getRange("A14:H14").merge().setValue("🗓️ السجل التفصيلي — الحضور وكل ورد في صف مستقل");
+  sh.getRange("A14:H14").merge().setValue("🗓️ السجل التفصيلي — الحضور والأوراد والمدفوعات");
   sh.getRange("A14:H14").setBackground("#173f35").setFontColor("#ffffff").setFontWeight("bold");
-  sh.getRange("A15:H15").setValues([["التاريخ", "النوع", "السورة / الحالة", "من آية", "إلى آية", "التقييم", "النسبة", "الملاحظات / آخر تحديث"]]);
+  sh.getRange("A15:H15").setValues([
+    ["التاريخ", "النوع", "البيان / السورة / الحالة", "من آية / إجمالي", "إلى آية / نصيب الفرد", "التقييم / رقم الدفعة", "النسبة", "الملاحظات / التفاصيل"],
+  ]);
   sh.getRange("A15:H15").setFontWeight("bold").setBackground("#dce9df").setWrap(true);
   sh.setFrozenRows(15);
   if (sh.getFilter()) sh.getFilter().remove();
@@ -788,11 +1221,12 @@ function ensureDetail_(ss) {
   sh.getRange("A16:H2000").clearContent();
   updateDetailSelector_(ss, sh);
   sh.setColumnWidths(1, 8, 135);
-  sh.setColumnWidth(3, 180);
-  sh.setColumnWidth(8, 240);
+  sh.setColumnWidth(3, 190);
+  sh.setColumnWidth(8, 250);
   sh.getRange("A1:H2000").setVerticalAlignment("middle");
   sh.getRange("A16:H2000").setWrap(true);
 }
+
 function updateDetailSelector_(ss, sh) {
   const students = rowsToObjects_(
     ss.getSheetByName(SHEETS.STUDENTS),
@@ -811,7 +1245,7 @@ function updateDetailSelector_(ss, sh) {
     .build();
   sh.getRange("B3").setDataValidation(rule);
   sh.getRange("B3").setNote(
-    "يمكن اختيار الطالب أو كتابة الـID أو الاسم ثم الضغط Enter.",
+    "اختر الطالب أو اكتب الـID أو الاسم، أو اكتب رقم الدفعة المشتركة (مثل SH-1001) ثم اضغط Enter.",
   );
 }
 
@@ -838,90 +1272,247 @@ function updateStudentDetails(e) {
   if (!sh) return;
   const studentsSheet = ss.getSheetByName(SHEETS.STUDENTS);
   const recordsSheet = ss.getSheetByName(SHEETS.RECORDS);
+  const paymentsSheet = ss.getSheetByName(SHEETS.PAYMENTS);
   if (!studentsSheet || !recordsSheet) return;
   const students = rowsToObjects_(studentsSheet, STUDENT_HEADERS);
-  const selectedValue = sh.getRange("B3").getValue();
-  const s = resolveDetailStudent_(selectedValue, students);
-  // امسح نواتج التقرير فقط؛ لا نلمس أوراق الطلاب أو السجلات الأصلية.
+  const studentNameMap = {};
+  students.forEach((st) => {
+    studentNameMap[String(st["المعرف"] || "").trim()] = String(st["الاسم"] || "").trim();
+  });
+  const selectedValue = String(sh.getRange("B3").getValue() || "").trim();
+
   sh.getRange("B6:B9").clearContent();
   sh.getRange("D6:D9").clearContent();
   sh.getRange("F6:F9").clearContent();
   sh.getRange("H6:H9").clearContent();
-  ["B12", "D12", "F12", "H12"].forEach(a1 => sh.getRange(a1).clearContent());
+  ["B12", "D12", "F12", "H12"].forEach((a1) => sh.getRange(a1).clearContent());
   const lastRow = Math.max(sh.getLastRow(), 16);
   if (lastRow >= 16) sh.getRange(16, 1, lastRow - 15, 8).clearContent();
+  if (!selectedValue) return;
+
+  // دعم البحث برقم الدفعة المشتركة مباشرةً في خلية B3 (مثال: SH-1001)
+  if (/^SH-/i.test(selectedValue) && paymentsSheet && paymentsSheet.getLastRow() > 1) {
+    const paymentRows = rowsToObjects_(paymentsSheet, PAYMENT_HEADERS);
+    const matchedPayments = paymentRows.filter(
+      (p) =>
+        String(p["رقم الدفعة"] || "").trim().toUpperCase() ===
+          selectedValue.toUpperCase() ||
+        String(p["معرف الدفعة"] || "").trim() === selectedValue,
+    );
+    if (matchedPayments.length > 0) {
+      const p = matchedPayments[0];
+      const ids = String(p["الطلاب"] || "")
+        .split(",")
+        .map((v) => v.trim())
+        .filter(Boolean);
+      const totalAmt = Number(p["المبلغ الإجمالي"] || 0) || 0;
+      const shareAmt = ids.length ? Math.round((totalAmt / ids.length) * 100) / 100 : totalAmt;
+      const memberNames = ids
+        .map((id) => `${studentNameMap[id] || "طالب"} (#${id})`)
+        .join("، ");
+      sh.getRange("B6:B9").setValues([
+        [`دفعة مشتركة ${p["رقم الدفعة"]}`],
+        [String(p["معرف الدفعة"] || "")],
+        [String(p["المجموعة"] || "—")],
+        [`${ids.length} طلاب مشاركين`],
+      ]);
+      sh.getRange("D6:D9").setValues([
+        [`الإجمالي: ${totalAmt} ج.م`],
+        [`نصيب الفرد: ${shareAmt} ج.م`],
+        [String(p["الفترة"] || "")],
+        [normalizeDate_(p["التاريخ"])],
+      ]);
+      sh.getRange("H12").setValue(totalAmt).setNumberFormat("#,##0.00");
+      const rowsOut = ids.map((id) => [
+        normalizeDate_(p["التاريخ"]),
+        "دفعة مشتركة",
+        `${studentNameMap[id] || "طالب"} (ID: ${id})`,
+        totalAmt,
+        shareAmt,
+        String(p["رقم الدفعة"] || ""),
+        "",
+        `دفعة مشتركة (${p["رقم الدفعة"]}) — نصيب العضو ${shareAmt} ج.م من إجمالي ${totalAmt} ج.م — ${p["ملاحظات"] || ""}`,
+      ]);
+      if (rowsOut.length) sh.getRange(16, 1, rowsOut.length, 8).setValues(rowsOut);
+      return;
+    }
+  }
+
+  const s = resolveDetailStudent_(selectedValue, students);
   if (!s) return;
 
   const id = String(s["المعرف"] || "");
   const name = String(s["الاسم"] || "");
-  const records = rowsToObjects_(recordsSheet, RECORD_HEADERS).filter(x => String(x["معرف الطالب"] || "") === id);
-  const presentRecords = records.filter(r => statusPresent_(r["الحالة"]));
-  const absentRecords = records.filter(r => statusAbsent_(r["الحالة"]));
+  const records = rowsToObjects_(recordsSheet, RECORD_HEADERS).filter(
+    (x) => String(x["معرف الطالب"] || "") === id,
+  );
+  const presentRecords = records.filter((r) => statusPresent_(r["الحالة"]));
+  const absentRecords = records.filter((r) => statusAbsent_(r["الحالة"]));
   const totalAttendance = presentRecords.length + absentRecords.length;
-  const manualScores = records.map(r => Number(r["الحفظ"])).filter(n => Number.isFinite(n) && n >= 0 && n <= 100);
+  const manualScores = records
+    .filter((r) => r["الحفظ"] !== "" && r["الحفظ"] != null)
+    .map((r) => Number(r["الحفظ"]))
+    .filter((n) => Number.isFinite(n) && n >= 0 && n <= 100);
   const allWards = [];
-  records.forEach(r => {
+  records.forEach((r) => {
     let wards = [];
-    try { wards = JSON.parse(String(r["أوراد الحفظ"] || "[]")); } catch (_) { wards = []; }
+    try {
+      wards = JSON.parse(String(r["أوراد الحفظ"] || "[]"));
+    } catch (_) {
+      wards = [];
+    }
     if (!Array.isArray(wards)) return;
-    wards.forEach(w => allWards.push({ ward: w || {}, record: r }));
+    wards.forEach((w) => allWards.push({ ward: w || {}, record: r }));
   });
-  const scoreMap = { "ممتاز":100, "جيد جدًا":90, "جيد جدا":90, "جيد":80, "مقبول":70, "يحتاج مراجعة":60, "ضعيف":50 };
-  const wardScore = item => {
-    const w = item.ward;
-    const n = Number(w.score != null ? w.score : w.percentage);
-    if (Number.isFinite(n) && n >= 0 && n <= 100) return n;
-    const label = String(w.rating || w.grade || "").replace(/\s*\([^)]*\)\s*/g, "").trim();
-    return Object.prototype.hasOwnProperty.call(scoreMap, label) ? scoreMap[label] : null;
+  const scoreMap = {
+    "ممتاز": 100,
+    "جيد جدًا": 90,
+    "جيد جدا": 90,
+    "جيد": 80,
+    "مقبول": 70,
+    "يحتاج مراجعة": 60,
+    "ضعيف": 50,
   };
-  const rated = allWards.map(wardScore).filter(n => n !== null);
-  const avgWard = rated.length ? rated.reduce((a,b)=>a+b,0)/rated.length : "";
-  const avgManual = manualScores.length ? manualScores.reduce((a,b)=>a+b,0)/manualScores.length : "";
-  const typeOf = w => {
+  const wardScore = (item) => {
+    const w = item.ward;
+    const raw = w.score != null && w.score !== "" ? w.score : w.percentage;
+    const n = raw != null && raw !== "" ? Number(raw) : NaN;
+    if (Number.isFinite(n) && n >= 0 && n <= 100) return n;
+    const label = String(w.rating || w.grade || "")
+      .replace(/\s*\([^)]*\)\s*/g, "")
+      .trim();
+    return Object.prototype.hasOwnProperty.call(scoreMap, label)
+      ? scoreMap[label]
+      : null;
+  };
+  const rated = allWards.map(wardScore).filter((n) => n !== null);
+  const avgWard = rated.length
+    ? rated.reduce((a, b) => a + b, 0) / rated.length
+    : "";
+  const avgManual = manualScores.length
+    ? manualScores.reduce((a, b) => a + b, 0) / manualScores.length
+    : "";
+  const typeOf = (w) => {
     const raw = String(w.type || "").toLowerCase();
     if (["new", "new-hifz", "حفظ جديد", "جديد"].includes(raw)) return "حفظ جديد";
-    if (["review", "past", "ماضي", "ماضٍ", "مراجعة"].includes(raw)) return "مراجعة";
-    if ([" تثبيت", "ثبات", " تثبيت ", " تثبيت "].includes(raw) || raw.includes("ثبيت") || raw === " تثبيت") return "تثبيت";
+    if (["review", "past", "ماضي", "ماضٍ", "مراجعة"].includes(raw))
+      return "مراجعة";
+    if (raw.includes("ثبيت") || raw === "fixation" || raw === "test")
+      return "تثبيت";
     return String(w.type || "ورد");
   };
-  const newCount = allWards.filter(x => typeOf(x.ward) === "حفظ جديد").length;
-  const reviewCount = allWards.filter(x => typeOf(x.ward) === "مراجعة").length;
-  const تثبيتCount = allWards.filter(x => typeOf(x.ward) === "تثبيت").length;
-  const surahs = [...new Set(allWards.map(x => String(x.ward.surah || "").trim()).filter(Boolean))];
+  const newCount = allWards.filter((x) => typeOf(x.ward) === "حفظ جديد").length;
+  const reviewCount = allWards.filter((x) => typeOf(x.ward) === "مراجعة").length;
+  const fixationCount = allWards.filter((x) => typeOf(x.ward) === "تثبيت").length;
+  const surahs = [
+    ...new Set(
+      allWards.map((x) => String(x.ward.surah || "").trim()).filter(Boolean),
+    ),
+  ];
 
   sh.getRange("B3").setValue(`${id} — ${name}`);
-  sh.getRange("B6:B9").setValues([[name],[id],[String(s["المجموعة"] || "")],[s["العمر"] || ""]]);
-  sh.getRange("D6:D9").setValues([[String(s["الهاتف"] || "")],[String(s["هاتف ولي الأمر"] || "")],[String(s["الحالة"] || "نشط")],[String(s["آخر تحديث"] || "")]]);
-  sh.getRange("F6:F9").setValues([[presentRecords.length],[absentRecords.length],[totalAttendance ? presentRecords.length/totalAttendance : ""],[avgManual]]);
-  sh.getRange("H6:H9").setValues([[allWards.length],[newCount],[reviewCount],[تثبيتCount]]);
+  sh.getRange("B6:B9").setValues([
+    [name],
+    [id],
+    [String(s["المجموعة"] || "")],
+    [s["العمر"] || ""],
+  ]);
+  sh.getRange("D6:D9").setValues([
+    [String(s["الهاتف"] || "")],
+    [String(s["هاتف ولي الأمر"] || "")],
+    [String(s["الحالة"] || "نشط")],
+    [s["المصروف الشهري"] ? `${s["المصروف الشهري"]} ج.م` : "—"],
+  ]);
+  sh.getRange("F6:F9").setValues([
+    [presentRecords.length],
+    [absentRecords.length],
+    [totalAttendance ? presentRecords.length / totalAttendance : ""],
+    [avgManual],
+  ]);
+  sh.getRange("H6:H9").setValues([
+    [allWards.length],
+    [newCount],
+    [reviewCount],
+    [fixationCount],
+  ]);
   sh.getRange("F8").setNumberFormat("0.0%");
   sh.getRange("F9").setNumberFormat("0.0");
-  sh.getRange("B12").setValue(avgWard === "" ? "" : avgWard/100).setNumberFormat("0.0%");
+  sh.getRange("B12")
+    .setValue(avgWard === "" ? "" : avgWard / 100)
+    .setNumberFormat("0.0%");
   sh.getRange("D12").setValue(surahs.length);
-  const latestWard = allWards.slice().sort((a,b)=>String(b.record["التاريخ"]||"").localeCompare(String(a.record["التاريخ"]||"")))[0];
-  sh.getRange("F12").setValue(latestWard ? `${latestWard.ward.surah || ""} ${latestWard.ward.from || ""}${latestWard.ward.to ? "–"+latestWard.ward.to : ""}`.trim() : "—");
+  const latestWard = allWards
+    .slice()
+    .sort((a, b) =>
+      String(b.record["التاريخ"] || "").localeCompare(
+        String(a.record["التاريخ"] || ""),
+      ),
+    )[0];
+  sh.getRange("F12").setValue(
+    latestWard
+      ? `${latestWard.ward.surah || ""} ${latestWard.ward.from || ""}${latestWard.ward.to ? "–" + latestWard.ward.to : ""}`.trim()
+      : "—",
+  );
 
-  // إجمالي المدفوعات يُحسب فقط من صفوف الدفعات التي تذكر معرف الطالب أو اسمه.
-  const paymentsSheet = ss.getSheetByName(SHEETS.PAYMENTS);
+  // حساب نصيب الطالب الفعلي من الدفعات (تقسيم الدفعة المشتركة على الأعضاء المشاركين)
+  const timeline = [];
   let paidTotal = 0;
   if (paymentsSheet && paymentsSheet.getLastRow() > 1) {
     const paymentRows = rowsToObjects_(paymentsSheet, PAYMENT_HEADERS);
-    paymentRows.forEach(p => {
-      const who = String(p["الطلاب"] || "");
-      if (who.includes(id) || (name && who.includes(name))) paidTotal += Number(p["المبلغ الإجمالي"] || 0) || 0;
+    paymentRows.forEach((p) => {
+      const ids = String(p["الطلاب"] || "")
+        .split(",")
+        .map((v) => v.trim())
+        .filter(Boolean);
+      if (ids.indexOf(id) !== -1) {
+        const totalAmt = Number(p["المبلغ الإجمالي"] || 0) || 0;
+        const isSh = String(p["النوع"] || "") === "shared" || ids.length > 1;
+        const shareAmt = ids.length > 0 ? Math.round((totalAmt / ids.length) * 100) / 100 : totalAmt;
+        paidTotal += shareAmt;
+        const code = String(p["رقم الدفعة"] || "").trim();
+        const pDate = normalizeDate_(p["التاريخ"]);
+        timeline.push([
+          pDate,
+          isSh ? "دفعة مشتركة" : "دفعة فردية",
+          String(p["الفترة"] || "سداد اشتراك"),
+          totalAmt,
+          shareAmt,
+          code || (isSh ? "مشتركة" : "فردية"),
+          "",
+          isSh
+            ? `دفعة مشتركة ${code ? "(" + code + ") " : ""}— نصيب الطالب: ${shareAmt} ج.م من إجمالي ${totalAmt} ج.م (${ids.length} طلاب) ${p["ملاحظات"] ? "— " + p["ملاحظات"] : ""}`
+            : `دفعة فردية: ${shareAmt} ج.م ${p["ملاحظات"] ? "— " + p["ملاحظات"] : ""}`,
+        ]);
+      }
     });
   }
-  sh.getRange("H12").setValue(paidTotal).setNumberFormat("#,##0.00");
+  sh.getRange("H12").setValue(Math.round(paidTotal * 100) / 100).setNumberFormat("#,##0.00");
 
-  const timeline = [];
-  records.forEach(r => {
-    const date = String(r["التاريخ"] || "");
-    timeline.push([date, "حضور", statusPresent_(r["الحالة"]) ? "حاضر" : statusAbsent_(r["الحالة"]) ? "غائب" : String(r["الحالة"] || "—"), "", "", r["الحفظ"] === "" ? "" : r["الحفظ"], (r["الحفظ"] === "" || r["الحفظ"] == null) ? "" : Number(r["الحفظ"])/100, String(r["آخر تحديث"] || "")]);
+  records.forEach((r) => {
+    const date = normalizeDate_(r["التاريخ"]);
+    timeline.push([
+      date,
+      "حضور",
+      statusPresent_(r["الحالة"])
+        ? "حاضر"
+        : statusAbsent_(r["الحالة"])
+          ? "غائب"
+          : String(r["الحالة"] || "—"),
+      "",
+      "",
+      r["الحفظ"] === "" ? "" : r["الحفظ"],
+      r["الحفظ"] === "" || r["الحفظ"] == null ? "" : Number(r["الحفظ"]) / 100,
+      String(r["آخر تحديث"] || ""),
+    ]);
     let wards = [];
-    try { wards = JSON.parse(String(r["أوراد الحفظ"] || "[]")); } catch (_) { wards = []; }
+    try {
+      wards = JSON.parse(String(r["أوراد الحفظ"] || "[]"));
+    } catch (_) {
+      wards = [];
+    }
     if (!Array.isArray(wards)) return;
-    wards.forEach(w => {
-      const score = wardScore({ward:w, record:r});
+    wards.forEach((w) => {
+      const score = wardScore({ ward: w, record: r });
       timeline.push([
         date,
         typeOf(w),
@@ -929,20 +1520,24 @@ function updateStudentDetails(e) {
         w.from == null ? "" : w.from,
         w.to == null ? "" : w.to,
         String(w.rating || w.grade || ""),
-        score === null ? "" : score/100,
-        [String(w.endsSurah ? "نهاية السورة" : ""), String(w.notes || "")].filter(Boolean).join(" — ")
+        score === null ? "" : score / 100,
+        [String(w.endsSurah ? "نهاية السورة" : ""), String(w.notes || "")]
+          .filter(Boolean)
+          .join(" — "),
       ]);
     });
   });
-  timeline.sort((a,b)=>String(b[0]).localeCompare(String(a[0])) || String(a[1]).localeCompare(String(b[1])));
-  if (timeline.length) sh.getRange(16, 1, timeline.length, 8).setValues(timeline);
+  timeline.sort(
+    (a, b) =>
+      String(b[0]).localeCompare(String(a[0])) ||
+      String(a[1]).localeCompare(String(b[1])),
+  );
   if (timeline.length) {
+    sh.getRange(16, 1, timeline.length, 8).setValues(timeline);
     sh.getRange(16, 7, timeline.length, 1).setNumberFormat("0.0%");
-    sh.getBandings().forEach(b => b.remove());
-    sh.getRange(15, 1, timeline.length + 1, 8).applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
   }
-  updateDetailSelector_(ss, sh);
 }
+
 function onEdit(e) {
   if (
     e &&
@@ -955,26 +1550,15 @@ function onEdit(e) {
 }
 
 function formatBaseSheets_(ss) {
-  [SHEETS.STUDENTS, SHEETS.RECORDS, SHEETS.PAYMENTS].forEach((name) => {
+  [SHEETS.STUDENTS, SHEETS.RECORDS, SHEETS.PAYMENTS, SHEETS.WARDS].forEach((name) => {
     const sh = ss.getSheetByName(name);
+    if (!sh) return;
     sh.setFrozenRows(1);
     const lastCol = sh.getLastColumn();
     if (lastCol) sh.getRange(1, 1, 1, lastCol).setFontWeight("bold");
-    sh.autoResizeColumns(1, lastCol);
   });
 }
-function readMap_(sheet, keyCol) {
-  const out = {};
-  const n = sheet.getLastRow();
-  if (n < 2) return out;
-  const vals = sheet.getRange(2, keyCol, n - 1, 1).getValues();
-  vals.forEach((r, i) => {
-    if (r[0] !== "") out[String(r[0])] = i + 2;
-  });
-  return out;
-}
-// Read by the actual header names, not assumed column positions. This keeps
-// older sheets compatible when new columns were appended during migration.
+
 function headerMap_(sheet) {
   const width = Math.max(sheet.getLastColumn(), 1);
   const names = sheet.getRange(1, 1, 1, width).getDisplayValues()[0];
@@ -985,35 +1569,27 @@ function headerMap_(sheet) {
   });
   return out;
 }
-function getCellByHeader_(sheet, row, header) {
-  const col = headerMap_(sheet)[header];
-  return col ? sheet.getRange(row, col).getValue() : "";
-}
-function writeRowByHeaders_(sheet, row, headers, values) {
-  const map = headerMap_(sheet);
-  headers.forEach((header, i) => {
-    const col = map[header];
-    if (col) sheet.getRange(row, col).setValue(values[i]);
-  });
-}
-function appendRowByHeaders_(sheet, headers, values) {
-  const row = Math.max(sheet.getLastRow() + 1, 2);
-  writeRowByHeaders_(sheet, row, headers, values);
-}
+
 function rowsToObjects_(sheet, headers) {
+  if (!sheet) return [];
   const n = sheet.getLastRow();
   if (n < 2) return [];
   const width = Math.max(sheet.getLastColumn(), 1);
-  const actualHeaders = sheet.getRange(1, 1, 1, width).getDisplayValues()[0].map(v => String(v || "").trim());
-  const values = sheet.getRange(2, 1, n - 1, width).getValues();
-  return values.map(row => {
+  const allVals = sheet.getRange(1, 1, n, width).getValues();
+  const actualHeaders = allVals[0].map((v) => String(v || "").trim());
+  const values = allVals.slice(1);
+  return values.map((row) => {
     const o = {};
-    actualHeaders.forEach((h, i) => { if (h) o[h] = row[i]; });
-    // Preserve expected keys even if an old/malformed sheet is missing a header.
-    headers.forEach(h => { if (!(h in o)) o[h] = ""; });
+    actualHeaders.forEach((h, i) => {
+      if (h) o[h] = row[i];
+    });
+    headers.forEach((h) => {
+      if (!(h in o)) o[h] = "";
+    });
     return o;
   });
 }
+
 function statusPresent_(v) {
   return (
     String(v || "").toLowerCase() === "present" || String(v || "") === "حاضر"

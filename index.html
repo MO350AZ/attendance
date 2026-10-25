@@ -216,6 +216,145 @@
       .hidden {
         display: none !important;
       }
+      @media (min-width: 640px) {
+        .sm\:inline {
+          display: inline !important;
+        }
+        .sm\:flex {
+          display: flex !important;
+        }
+        .sm\:grid {
+          display: grid !important;
+        }
+      }
+      @media (min-width: 768px) {
+        .md\:flex {
+          display: flex !important;
+        }
+        .md\:grid {
+          display: grid !important;
+        }
+        .md\:inline-block {
+          display: inline-block !important;
+        }
+        .md\:block {
+          display: block !important;
+        }
+        .md\:hidden {
+          display: none !important;
+        }
+      }
+
+      .fixed-top-header {
+        position: fixed !important;
+        top: 0 !important;
+        right: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        z-index: 950 !important;
+      }
+      .app-shell-with-fixed-header {
+        padding-top: calc(3.5rem + env(safe-area-inset-top, 0px)) !important;
+      }
+      @media (min-width: 768px) {
+        .desktop-sticky-sidebar {
+          position: sticky !important;
+          top: calc(3.5rem + env(safe-area-inset-top, 0px)) !important;
+          height: calc(100dvh - 3.5rem - env(safe-area-inset-top, 0px)) !important;
+          overflow-y: auto !important;
+          align-self: flex-start !important;
+        }
+      }
+
+      /* Custom Scrollable Ward Picker (Surah & Ayah Dropdown for iPhone/iOS & Desktop) */
+      .ward-picker-wrap {
+        position: relative;
+        min-width: 0;
+      }
+      .ward-picker-wrap input {
+        padding-inline-end: 34px !important;
+      }
+      .ward-picker-toggle {
+        position: absolute;
+        top: 50%;
+        inset-inline-end: 7px;
+        transform: translateY(-50%);
+        width: 24px !important;
+        height: 24px !important;
+        min-height: 24px !important;
+        border: 0 !important;
+        border-radius: 8px !important;
+        background: rgb(var(--color-primary) / 0.1) !important;
+        color: rgb(var(--color-primary)) !important;
+        display: grid !important;
+        place-items: center !important;
+        font-size: 11px !important;
+        cursor: pointer;
+        padding: 0 !important;
+        z-index: 2;
+        box-shadow: none !important;
+      }
+      .ward-picker-toggle:hover {
+        background: rgb(var(--color-primary) / 0.18) !important;
+      }
+      .ward-picker-menu {
+        position: absolute;
+        top: calc(100% + 5px);
+        right: 0;
+        left: 0;
+        z-index: 80;
+        background: #fbf7ee;
+        border: 1px solid rgb(var(--color-primary) / 0.25);
+        border-radius: 16px;
+        box-shadow: 0 14px 36px -10px rgba(8, 48, 31, 0.35);
+        max-height: 215px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        padding: 5px;
+      }
+      html.dark .ward-picker-menu {
+        background: #17211c;
+        border-color: rgb(var(--color-primary) / 0.35);
+      }
+      html[data-theme="ocean"] .ward-picker-menu {
+        background: #f6fbfe;
+      }
+      .ward-picker-option {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+        width: 100% !important;
+        padding: 8px 10px !important;
+        border: 0 !important;
+        border-radius: 10px !important;
+        background: transparent !important;
+        color: inherit !important;
+        text-align: right !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        cursor: pointer;
+        box-shadow: none !important;
+      }
+      .ward-picker-option:hover,
+      .ward-picker-option.active {
+        background: rgb(var(--color-primary) / 0.12) !important;
+        color: rgb(var(--color-primary)) !important;
+      }
+      .wa-locked-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border-radius: 12px;
+        background: rgb(var(--color-primary) / 0.1);
+        border: 1px dashed rgb(var(--color-primary) / 0.35);
+        color: rgb(var(--color-primary));
+        padding: 6px 11px;
+        font-size: 12px;
+        font-weight: 700;
+        user-select: none;
+      }
 
       /* Form controls in Dar Al-Hafiz style */
       .dh-input,
@@ -1011,6 +1150,84 @@
         padding: 4px 0;
       }
 
+      /* Interactive Date Picker Unified Styling */
+      .dh-date-picker {
+        position: relative;
+        min-width: 0;
+        width: 100%;
+        cursor: pointer;
+      }
+      .dh-date-display {
+        min-height: 46px;
+        box-sizing: border-box;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        direction: ltr;
+        unicode-bidi: isolate;
+        text-align: center;
+        font-size: 14.5px;
+        font-weight: 700;
+        color: #292524;
+        background: #ffffff;
+        border: 1px solid rgb(var(--color-primary) / 0.22);
+        border-radius: 16px;
+        padding: 10px 14px;
+        pointer-events: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+      html.dark .dh-date-display {
+        background: #17211c;
+        color: #ece7dd;
+        border-color: rgb(var(--color-primary) / 0.28);
+      }
+      .dh-date-picker:hover .dh-date-display,
+      .dh-date-picker:focus-within .dh-date-display {
+        border-color: rgb(var(--color-primary) / 0.55);
+        box-shadow: 0 0 0 4px rgb(var(--color-primary) / 0.10);
+      }
+      .dh-date-picker input[type="date"] {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        opacity: 0.015;
+        cursor: pointer;
+        z-index: 2;
+      }
+
+      /* Print styles for Group QR Cards */
+      @media print {
+        body * {
+          visibility: hidden !important;
+        }
+        #groupQrModal,
+        #groupQrModal * {
+          visibility: visible !important;
+        }
+        #groupQrModal {
+          position: static !important;
+          background: #ffffff !important;
+          padding: 0 !important;
+          overflow: visible !important;
+        }
+        #groupQrModal .qr-modal-card {
+          width: 100% !important;
+          max-width: 100% !important;
+          max-height: none !important;
+          box-shadow: none !important;
+          border: none !important;
+          background: #ffffff !important;
+          padding: 8px !important;
+        }
+        .no-print {
+          display: none !important;
+        }
+      }
+
     </style>
   </head>
   <body class="paper">
@@ -1171,10 +1388,258 @@
       </div>
     </div>
 
+    <!-- Edit Ward Modal (تعديل الورد) -->
+    <div
+      id="editWardModal"
+      class="qr-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="editWardModalTitle"
+    >
+      <div class="qr-modal-card" style="width: min(500px, 100%)">
+        <div class="flex items-start justify-between gap-3 border-b border-primary/10 pb-3">
+          <div>
+            <h3 id="editWardModalTitle" class="font-display text-[22px] text-primary m-0">✏️ تعديل بيانات الورد</h3>
+            <p id="editWardModalSubtitle" class="text-[12px] text-stone-500 mt-0.5"></p>
+          </div>
+          <button
+            type="button"
+            onclick="closeEditWardModal()"
+            aria-label="إغلاق"
+            class="w-9 h-9 rounded-full grid place-items-center text-stone-500 hover:bg-primary/5"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="mt-3 space-y-3">
+          <div class="ward-grid">
+            <label class="text-[12px] font-bold text-stone-600">نوع الورد
+              <select id="editWardType" class="dh-input mt-1">
+                <option value="new">حفظ جديد</option>
+                <option value="review">ماضي / مراجعة</option>
+                <option value="fixation">تثبيت / اختبار</option>
+              </select>
+            </label>
+            <label class="text-[12px] font-bold text-stone-600">السورة (اختر أو ابحث)
+              <div class="ward-picker-wrap mt-1">
+                <input id="editWardSurah" data-ward-picker="surah" autocomplete="off" placeholder="مثال: البقرة" class="dh-input" oninput="refreshEditWardModalHints()" />
+                <button type="button" class="ward-picker-toggle" data-ward-picker-btn="surah" tabindex="-1" aria-label="قائمة السور">▾</button>
+                <div class="ward-picker-menu hidden" data-ward-menu="surah"></div>
+              </div>
+              <span id="editWardSurahHint" class="small block mt-0.5"></span>
+            </label>
+            <label class="text-[12px] font-bold text-stone-600">من آية
+              <div class="ward-picker-wrap mt-1">
+                <input id="editWardFrom" data-ward-picker="from" type="text" inputmode="numeric" pattern="[0-9]*" lang="en" dir="ltr" autocomplete="off" class="dh-input text-center" oninput="refreshEditWardModalHints()" />
+                <button type="button" class="ward-picker-toggle" data-ward-picker-btn="from" tabindex="-1" aria-label="قائمة الآيات">▾</button>
+                <div class="ward-picker-menu hidden" data-ward-menu="from"></div>
+              </div>
+            </label>
+            <label class="text-[12px] font-bold text-stone-600">إلى آية
+              <div class="ward-picker-wrap mt-1">
+                <input id="editWardTo" data-ward-picker="to" type="text" inputmode="numeric" pattern="[0-9]*" lang="en" dir="ltr" autocomplete="off" class="dh-input text-center" oninput="refreshEditWardModalHints()" />
+                <button type="button" class="ward-picker-toggle" data-ward-picker-btn="to" tabindex="-1" aria-label="قائمة الآيات">▾</button>
+                <div class="ward-picker-menu hidden" data-ward-menu="to"></div>
+              </div>
+              <span id="editWardEndHint" class="small block mt-0.5 text-primary font-bold"></span>
+            </label>
+            <label class="text-[12px] font-bold text-stone-600">التقييم
+              <select id="editWardRating" class="dh-input mt-1" onchange="onEditWardRatingChange()">
+                <option value="ممتاز">ممتاز — 100%</option>
+                <option value="جيد جدًا">جيد جدًا — 90%</option>
+                <option value="جيد">جيد — 80%</option>
+                <option value="مقبول">مقبول — 70%</option>
+                <option value="يحتاج مراجعة">يحتاج مراجعة — 60%</option>
+              </select>
+            </label>
+            <label class="text-[12px] font-bold text-stone-600">درجة الورد %
+              <input id="editWardScore" type="number" min="0" max="100" step="1" inputmode="numeric" pattern="[0-9]*" lang="en" dir="ltr" class="dh-input mt-1 text-center" />
+            </label>
+          </div>
+          <label class="block text-[12px] font-bold text-stone-600">ملاحظات (اختياري)
+            <input id="editWardNotes" placeholder="ملاحظات هذا الورد" class="dh-input mt-1" />
+          </label>
+          <div class="flex gap-2 pt-2">
+            <button type="button" onclick="saveEditedWard()" class="dh-btn dh-btn-primary flex-1">حفظ التعديل</button>
+            <button type="button" onclick="closeEditWardModal()" class="dh-btn dh-btn-outline flex-1">إلغاء</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Group QR Cards Modal (بطاقات QR للمجموعة) -->
+    <div
+      id="groupQrModal"
+      class="qr-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="groupQrModalTitle"
+    >
+      <div class="qr-modal-card" style="width: min(760px, 100%)">
+        <div class="flex items-start justify-between gap-3 border-b border-primary/10 pb-3 no-print">
+          <div>
+            <h3 id="groupQrModalTitle" class="font-display text-[22px] text-primary m-0">🪪 بطاقات QR لطلاب المجموعة</h3>
+            <p class="text-[12px] text-stone-500 mt-0.5">عرض وطباعة أو تحميل بطاقات QR لحلقة كاملة في صفحة واحدة</p>
+          </div>
+          <button
+            type="button"
+            onclick="closeGroupQrModal()"
+            aria-label="إغلاق"
+            class="w-9 h-9 rounded-full grid place-items-center text-stone-500 hover:bg-primary/5"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="mt-3 space-y-3">
+          <div class="flex flex-wrap items-center gap-2 no-print">
+            <select id="groupQrSelect" class="dh-input flex-1" onchange="renderGroupQrCards()"></select>
+            <button type="button" onclick="downloadGroupQrSheetPng()" class="dh-btn dh-btn-primary text-[12.5px]">
+              ⬇️ تحميل كصورة مجمعة (PNG)
+            </button>
+            <button type="button" onclick="window.print()" class="dh-btn dh-btn-gold text-[12.5px]">
+              🖨️ طباعة البطاقات
+            </button>
+          </div>
+          <div id="groupQrCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[62vh] overflow-y-auto p-1"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WhatsApp Message Templates Modal (تخصيص رسائل واتساب مع حماية اسم الطالب) -->
+    <div
+      id="whatsappTemplatesModal"
+      class="qr-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="whatsappTemplatesModalTitle"
+    >
+      <div class="qr-modal-card" style="width: min(580px, 100%)">
+        <div class="flex items-start justify-between gap-3 border-b border-primary/10 pb-3">
+          <div>
+            <h3 id="whatsappTemplatesModalTitle" class="font-display text-[22px] text-primary m-0">💬 تخصيص صيغ رسائل واتساب</h3>
+            <p class="text-[12px] text-stone-500 mt-0.5">عدّل نصوص الرسائل بحرية، بينما يبقى اسم الطالب والبيانات التلقائية في خانات محمية تُطبّق على الكل تلقائياً بدون حذف.</p>
+          </div>
+          <button
+            type="button"
+            onclick="closeWhatsAppTemplatesModal()"
+            aria-label="إغلاق"
+            class="w-9 h-9 rounded-full grid place-items-center text-stone-500 hover:bg-primary/5"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="mt-3 space-y-3 max-h-[72vh] overflow-y-auto px-0.5">
+          <!-- Shared Fixed Structure: Greeting + Student Name Prefix + Signature -->
+          <div class="rounded-2xl border border-primary/15 bg-primary/5 p-3 space-y-2.5">
+            <p class="text-[12px] font-bold text-primary m-0">📌 الخانات المشتركة (تُطبّق على جميع الطلاب والرسائل)</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <label class="text-[12px] font-bold text-stone-600">تحية البداية
+                <input id="waTplGreeting" class="dh-input mt-1" placeholder="السلام عليكم ورحمة الله وبركاته" oninput="updateWhatsAppTemplatePreview()" />
+              </label>
+              <label class="text-[12px] font-bold text-stone-600">توقيع الختام
+                <input id="waTplSignature" class="dh-input mt-1" placeholder="إدارة دار الحافظ" oninput="updateWhatsAppTemplatePreview()" />
+              </label>
+            </div>
+            <div>
+              <span class="block text-[12px] font-bold text-stone-600 mb-1">خانة اسم الطالب (اللقب + الاسم التلقائي المحمي)</span>
+              <div class="flex flex-wrap items-center gap-2">
+                <input id="waTplStudentPrefix" class="dh-input" style="max-width: 170px" placeholder="الطالب:" oninput="updateWhatsAppTemplatePreview()" />
+                <span class="wa-locked-pill" title="هذه الخانة محمية وتُعوّض تلقائياً باسم كل طالب عند الإرسال">
+                  🔒 [اسم الطالب يُدرج هنا تلقائياً للكل]
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Template Type Selector Tabs -->
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" data-wa-tab="absence" onclick="switchWhatsAppTemplateTab('absence')" class="dh-btn dh-btn-primary text-[12px] py-1.5 px-3 rounded-xl">1. إشعار الغياب</button>
+            <button type="button" data-wa-tab="payment" onclick="switchWhatsAppTemplateTab('payment')" class="dh-btn dh-btn-outline text-[12px] py-1.5 px-3 rounded-xl">2. تذكير المصروف</button>
+            <button type="button" data-wa-tab="degree" onclick="switchWhatsAppTemplateTab('degree')" class="dh-btn dh-btn-outline text-[12px] py-1.5 px-3 rounded-xl">3. درجة الحفظ</button>
+            <button type="button" data-wa-tab="report" onclick="switchWhatsAppTemplateTab('report')" class="dh-btn dh-btn-outline text-[12px] py-1.5 px-3 rounded-xl">4. التقرير العام</button>
+          </div>
+
+          <!-- Tab 1: Absence -->
+          <div id="waTabPanel_absence" class="wa-tpl-panel space-y-2.5 rounded-2xl border border-primary/15 p-3">
+            <label class="block text-[12px] font-bold text-stone-600">النص قبل اسم الطالب
+              <input id="waTplAbsenceIntro" class="dh-input mt-1" placeholder="نفيدكم بأن" oninput="updateWhatsAppTemplatePreview()" />
+            </label>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="wa-locked-pill">🔒 اللقب + اسم الطالب تلقائياً</span>
+            </div>
+            <label class="block text-[12px] font-bold text-stone-600">نص الغياب (يليه تاريخ الغياب تلقائياً)
+              <input id="waTplAbsenceBody" class="dh-input mt-1" placeholder="لم يحضر حلقة دار الحافظ يوم" oninput="updateWhatsAppTemplatePreview()" />
+            </label>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="wa-locked-pill">🔒 تاريخ اليوم / الغياب يُكتب تلقائياً</span>
+            </div>
+            <label class="block text-[12px] font-bold text-stone-600">جملة الختام قبل التوقيع
+              <input id="waTplAbsenceFooter" class="dh-input mt-1" placeholder="نرجو إبلاغنا بالسبب، ونتطلع لعودته قريباً بإذن الله." oninput="updateWhatsAppTemplatePreview()" />
+            </label>
+          </div>
+
+          <!-- Tab 2: Payment Reminder -->
+          <div id="waTabPanel_payment" class="wa-tpl-panel space-y-2.5 rounded-2xl border border-primary/15 p-3 hidden">
+            <label class="block text-[12px] font-bold text-stone-600">النص التمهيدي قبل اسم الطالب
+              <input id="waTplPaymentIntro" class="dh-input mt-1" placeholder="تذكير ودي بخصوص سداد الاشتراك الشهري لـ" oninput="updateWhatsAppTemplatePreview()" />
+            </label>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="wa-locked-pill">🔒 اللقب + اسم الطالب تلقائياً</span>
+              <span class="wa-locked-pill">🔒 المجموعة + الشهر + المبلغ تلقائياً</span>
+            </div>
+            <label class="block text-[12px] font-bold text-stone-600">جملة الختام قبل التوقيع
+              <input id="waTplPaymentFooter" class="dh-input mt-1" placeholder="جزاكم الله خيراً على حسن تعاونكم وبارك في أولادكم." oninput="updateWhatsAppTemplatePreview()" />
+            </label>
+          </div>
+
+          <!-- Tab 3: Degree Notification -->
+          <div id="waTabPanel_degree" class="wa-tpl-panel space-y-2.5 rounded-2xl border border-primary/15 p-3 hidden">
+            <label class="block text-[12px] font-bold text-stone-600">النص التمهيدي قبل اسم الطالب (اختياري)
+              <input id="waTplDegreeIntro" class="dh-input mt-1" placeholder="إشعار مستوى الحفظ لـ" oninput="updateWhatsAppTemplatePreview()" />
+            </label>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="wa-locked-pill">🔒 اللقب + اسم الطالب تلقائياً</span>
+              <span class="wa-locked-pill">🔒 درجة الحفظ وتاريخ التسميع تلقائياً</span>
+            </div>
+            <label class="block text-[12px] font-bold text-stone-600">جملة الختام قبل التوقيع
+              <input id="waTplDegreeFooter" class="dh-input mt-1" placeholder="نسأل الله له التوفيق والسداد." oninput="updateWhatsAppTemplatePreview()" />
+            </label>
+          </div>
+
+          <!-- Tab 4: General Report -->
+          <div id="waTabPanel_report" class="wa-tpl-panel space-y-2.5 rounded-2xl border border-primary/15 p-3 hidden">
+            <label class="block text-[12px] font-bold text-stone-600">النص التمهيدي قبل اسم الطالب
+              <input id="waTplReportIntro" class="dh-input mt-1" placeholder="تقرير متابعة سريع عن" oninput="updateWhatsAppTemplatePreview()" />
+            </label>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="wa-locked-pill">🔒 اللقب + اسم الطالب تلقائياً</span>
+              <span class="wa-locked-pill">🔒 المجموعة + نسبة الحضور + متوسط الحفظ تلقائياً</span>
+            </div>
+            <label class="block text-[12px] font-bold text-stone-600">جملة الختام قبل التوقيع
+              <input id="waTplReportFooter" class="dh-input mt-1" placeholder="نشكر تعاونكم، ونرجو التواصل لأي استفسار." oninput="updateWhatsAppTemplatePreview()" />
+            </label>
+          </div>
+
+          <!-- Live Preview -->
+          <div class="rounded-2xl border border-secondary/35 bg-secondary/10 p-3">
+            <p class="text-[11.5px] font-bold text-primary mb-1.5">👁️ معاينة حية لشكل الرسالة (مثال لطالب: أحمد محمد علي):</p>
+            <pre id="waTemplateLivePreview" class="text-[12.5px] leading-relaxed whitespace-pre-wrap font-sans text-stone-800 m-0 bg-white/80 rounded-xl p-2.5 border border-primary/10"></pre>
+          </div>
+
+          <div class="flex flex-wrap gap-2 pt-1">
+            <button type="button" onclick="saveWhatsAppTemplatesFromModal()" class="dh-btn dh-btn-primary flex-1">💾 حفظ صيغ الرسائل</button>
+            <button type="button" onclick="resetWhatsAppTemplatesToDefault()" class="dh-btn dh-btn-soft secondary">🔄 استعادة الافتراضي</button>
+            <button type="button" onclick="closeWhatsAppTemplatesModal()" class="dh-btn dh-btn-outline">إغلاق</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- App Layout Shell -->
-    <div id="appShell" class="min-h-[100dvh] flex flex-col">
-      <!-- Top Bar (Exact Dar Al-Hafiz Header) -->
-      <header class="sticky top-0 shrink-0 pt-[env(safe-area-inset-top,0px)] bar-surface border-b border-primary/10 z-20">
+    <div id="appShell" class="min-h-[100dvh] flex flex-col app-shell-with-fixed-header">
+      <!-- Top Bar (Exact Dar Al-Hafiz Header - Always Fixed) -->
+      <header class="fixed-top-header shrink-0 pt-[env(safe-area-inset-top,0px)] bar-surface border-b border-primary/10 shadow-sm">
         <div class="mx-auto max-w-6xl w-full px-4 md:px-8 h-14 flex items-center justify-between gap-3">
           <!-- Brand (Right side in RTL) -->
           <div class="flex items-center gap-2.5 min-w-0 cursor-pointer" onclick="showTab('home')">
@@ -1213,6 +1678,19 @@
             </button>
             <button
               type="button"
+              id="waTemplatesHeaderBtn"
+              onclick="openWhatsAppTemplatesModal()"
+              aria-label="تخصيص رسائل واتساب"
+              title="تخصيص رسائل واتساب"
+              class="w-10 h-10 grid place-items-center rounded-2xl border border-primary/20 bg-white/70 text-emerald-600 hover:bg-white transition"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"></path>
+                <path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"></path>
+              </svg>
+            </button>
+            <button
+              type="button"
               onclick="showTab('settings')"
               aria-label="الإعدادات والمزامنة"
               title="الإعدادات والمزامنة"
@@ -1231,7 +1709,41 @@
       <!-- Body Layout (Desktop Sidebar + Main Content) -->
       <div class="flex-1 flex min-h-0">
         <!-- Desktop Sidebar -->
-        
+        <aside class="hidden md:flex desktop-sticky-sidebar flex-col w-60 shrink-0 border-e border-primary/10 bar-surface p-4 select-none">
+          <div class="space-y-1.5 sticky top-20">
+            <p class="px-3 pb-1 text-[11px] font-bold text-stone-400">القائمة الرئيسية</p>
+            <button type="button" data-nav="home" onclick="showTab('home')" class="nav-btn w-full flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 text-[13px] font-bold transition bg-primary text-white shadow-[0_10px_24px_-16px_rgba(17,78,60,0.9)]">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              <span>الرئيسية</span>
+            </button>
+            <button type="button" data-nav="scan" onclick="showTab('scan')" class="nav-btn w-full flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 text-[13px] font-bold transition text-stone-600 hover:bg-primary/10">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
+              <span>سجل الحضور والـQR</span>
+            </button>
+            <button type="button" data-nav="memorization" onclick="showTab('memorization')" class="nav-btn w-full flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 text-[13px] font-bold transition text-stone-600 hover:bg-primary/10">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+              <span>سجل الحفظ والأوراد</span>
+            </button>
+            <button type="button" data-nav="students" onclick="showTab('students')" class="nav-btn w-full flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 text-[13px] font-bold transition text-stone-600 hover:bg-primary/10">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+              <span>إدارة الطلاب</span>
+            </button>
+            <button type="button" data-nav="payments" onclick="showTab('payments')" class="nav-btn w-full flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 text-[13px] font-bold transition text-stone-600 hover:bg-primary/10">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+              <span>المدفوعات والاشتراكات</span>
+            </button>
+            <button type="button" data-nav="dashboard" onclick="showTab('dashboard')" class="nav-btn w-full flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 text-[13px] font-bold transition text-stone-600 hover:bg-primary/10">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+              <span>التقارير والإحصائيات</span>
+            </button>
+            <div class="pt-3 mt-3 border-t border-primary/10">
+              <button type="button" data-nav="settings" onclick="showTab('settings')" class="nav-btn w-full flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 text-[13px] font-bold transition text-stone-600 hover:bg-primary/10">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span>الإعدادات والمزامنة</span>
+              </button>
+            </div>
+          </div>
+        </aside>
 
         <!-- Main Scrollable Content -->
         <main class="flex-1 min-w-0 pb-[calc(5.5rem_+_env(safe-area-inset-bottom,0px))]">
@@ -1429,15 +1941,21 @@
                 </div>
                 <div class="row" style="margin-top: 12px">
                   <label style="flex: 1" class="date-field">
-                    <span class="small">تاريخ التسجيل / الاختبار</span>
-                    <input
-                      id="recordDate"
-                      type="text"
-                      inputmode="numeric"
-                      maxlength="10"
-                      placeholder="يوم/شهر/سنة"
-                      style="width: 100%; direction: ltr; text-align: center"
-                    />
+                    <span class="small">تاريخ التسجيل / الاختبار (اضغط لاختيار التاريخ)</span>
+                    <div class="dh-date-picker" onclick="openNativeDatePicker('recordDate')">
+                      <div id="recordDateDisplay" class="dh-date-display">
+                        <span>📅</span>
+                        <span id="recordDateText">22/10/2026</span>
+                        <span class="text-[11px] text-primary/70">تغيير</span>
+                      </div>
+                      <input
+                        id="recordDate"
+                        type="date"
+                        lang="en-GB"
+                        dir="ltr"
+                        aria-label="تاريخ التسجيل"
+                      />
+                    </div>
                   </label>
                 </div>
                 <div class="camera" id="cameraBox">
@@ -1445,17 +1963,28 @@
                   <canvas id="canvas" class="hidden"></canvas>
                 </div>
                 <div class="row mt-2">
-                  <button id="startCam" class="dh-btn dh-btn-soft">📷 تشغيل الكاميرا</button>
-                  <input id="scanId" placeholder="ID الطالب" inputmode="numeric" />
+                  <button type="button" id="startCam" class="dh-btn dh-btn-soft">📷 تشغيل الكاميرا</button>
+                  <input
+                    id="scanId"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    lang="en"
+                    dir="ltr"
+                    placeholder="ID الطالب"
+                  />
                   <input
                     id="memoryInput"
                     type="number"
                     inputmode="numeric"
+                    pattern="[0-9]*"
+                    lang="en"
+                    dir="ltr"
                     min="0"
                     max="100"
                     placeholder="درجة الحفظ %"
                   />
-                  <button id="manualScan" class="dh-btn dh-btn-primary">تسجيل</button>
+                  <button type="button" id="manualScan" class="dh-btn dh-btn-primary">تسجيل</button>
                 </div>
 
                 <label class="ward-toggle" for="includeMemorization">
@@ -1471,6 +2000,10 @@
                       <input id="mergeDayWardsCheck" type="checkbox" checked class="w-4 h-4 accent-primary" />
                       <span>دمج مع أوراد الطالب المسجلة في نفس اليوم</span>
                     </label>
+                  </div>
+                  <div id="nextWardSuggestionBanner" class="rounded-2xl bg-secondary/15 border border-secondary/30 px-3.5 py-2.5 text-[12.5px] font-bold text-stone-800 mb-2 hidden flex flex-wrap items-center justify-between gap-2">
+                    <span id="nextWardSuggestionText"></span>
+                    <button type="button" onclick="applySuggestedNextWard(true)" class="dh-btn dh-btn-gold text-[11.5px] py-1 px-2.5 rounded-xl">تطبيق الاقتراح</button>
                   </div>
                   <div id="attendanceWardLiveSummary" class="rounded-2xl bg-primary/10 border border-primary/20 px-3.5 py-2 text-[12.5px] font-bold text-primary mb-2 hidden"></div>
                   <datalist id="quranSurahOptions"></datalist>
@@ -1551,6 +2084,9 @@
                     min="1"
                     max="100"
                     inputmode="numeric"
+                    pattern="[0-9]*"
+                    lang="en"
+                    dir="ltr"
                     placeholder="السن"
                   />
                   <div class="group-picker">
@@ -1561,11 +2097,13 @@
                     />
                     <div id="groupMenu" class="group-menu hidden"></div>
                   </div>
-                  <input id="sphone" type="tel" inputmode="tel" dir="ltr" placeholder="رقم التليفون" />
+                  <input id="sphone" type="tel" inputmode="numeric" pattern="[0-9]*" lang="en" dir="ltr" placeholder="رقم التليفون" />
                   <input
                     id="sguardianPhone"
                     type="tel"
-                    inputmode="tel"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    lang="en"
                     dir="ltr"
                     placeholder="رقم ولي الأمر (لواتساب)"
                   />
@@ -1575,6 +2113,9 @@
                     min="0"
                     step="1"
                     inputmode="numeric"
+                    pattern="[0-9]*"
+                    lang="en"
+                    dir="ltr"
                     placeholder="المصروف الشهري للطالب (ج.م — اختياري)"
                   />
                 </div>
@@ -1626,7 +2167,7 @@
                     </select>
                   </div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3.5">
                   <button
                     type="button"
                     id="openBulkDaysModal"
@@ -1641,6 +2182,13 @@
                     class="dh-btn dh-btn-soft secondary text-[12.5px] py-2.5"
                   >
                     💰 اشتراك شهري لمجموعة
+                  </button>
+                  <button
+                    type="button"
+                    onclick="openGroupQrModal()"
+                    class="dh-btn dh-btn-gold text-[12.5px] py-2.5"
+                  >
+                    🪪 بطاقات QR للمجموعة
                   </button>
                 </div>
 
@@ -1740,10 +2288,10 @@
                 </button>
               </div>
 
-              <div class="card">
-                <h2>تسجيل دفعة جديدة</h2>
+              <div class="card" id="paymentFormCard">
+                <h2 id="paymentFormTitle">تسجيل دفعة جديدة</h2>
                 <div class="notice">
-                  الدفعة المشتركة تُسجل كعملية مالية واحدة بالمبلغ الإجمالي. لا يتم تقسيم المبلغ على الطلاب.
+                  الدفعة المشتركة تأخذ رقماً مميزاً تلقائياً (مثل <b>SH-1001</b>) ويتم تقسيم مبلغها بالتساوي على الأعضاء المشاركين في حساب كل طالب مع إظهار شارة «دفعة مشتركة» ورقمها لسهولة البحث عنها في التطبيق والشيت.
                 </div>
                 <div class="grid-form mt-3">
                   <select id="paymentType">
@@ -1751,9 +2299,13 @@
                     <option value="shared">دفعة مشتركة لعدة طلاب</option>
                   </select>
                   <label class="date-field">
-                    <span class="small">تاريخ الدفع</span>
-                    <div class="payment-date-control">
-                      <div id="paymentDateDisplay" class="payment-date-display" dir="ltr">18/10/2026</div>
+                    <span class="small">تاريخ الدفع (اضغط لاختيار التاريخ)</span>
+                    <div class="dh-date-picker" onclick="openNativeDatePicker('paymentDate')">
+                      <div class="dh-date-display">
+                        <span>📅</span>
+                        <span id="paymentDateDisplay">22/10/2026</span>
+                        <span class="text-[11px] text-primary/70">تغيير</span>
+                      </div>
                       <input id="paymentDate" type="date" lang="en-GB" dir="ltr" aria-label="تاريخ الدفع" />
                     </div>
                   </label>
@@ -1761,7 +2313,9 @@
                   <input
                     id="paymentAmount"
                     type="number"
-                    inputmode="numeric"
+                    inputmode="decimal"
+                    lang="en"
+                    dir="ltr"
                     min="0"
                     step="0.01"
                     placeholder="إجمالي المبلغ بالجنيه (ج.م)"
@@ -1772,7 +2326,10 @@
                   <select id="paymentStudent"></select>
                 </div>
                 <div id="sharedStudents" class="card hidden mt-3" style="padding: 14px">
-                  <b class="text-[13px] text-primary">اختر الطلاب المشاركين في الدفعة</b>
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <b class="text-[13px] text-primary">اختر الطلاب المشاركين في الدفعة المشتركة</b>
+                    <span id="sharedPaymentLiveInfo" class="rounded-xl bg-secondary/20 px-2.5 py-1 text-[11.5px] font-bold text-secondary">اختر طالبين أو أكثر لحساب نصيب الفرد</span>
+                  </div>
                   <div id="sharedStudentList" class="mt-2 max-h-56 overflow-y-auto divide-y divide-primary/10"></div>
                 </div>
                 <input
@@ -1781,9 +2338,10 @@
                   style="width: 100%; margin-top: 10px"
                 />
                 <div class="row mt-3">
-                  <button id="savePayment" class="dh-btn dh-btn-primary">حفظ الدفعة</button>
-                  <button class="dh-btn dh-btn-outline secondary" id="clearPayment">تفريغ</button>
+                  <button type="button" id="savePayment" class="dh-btn dh-btn-primary">حفظ الدفعة</button>
+                  <button type="button" class="dh-btn dh-btn-outline secondary" id="clearPayment">تفريغ</button>
                 </div>
+                <div id="editPaymentInfo" class="small mt-2 font-bold text-primary"></div>
               </div>
 
               <div class="card">
@@ -1809,13 +2367,18 @@
               </div>
 
               <div class="card">
-                <h2>سجل الدفعات</h2>
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <h2 class="m-0">سجل الدفعات</h2>
+                  <button type="button" onclick="exportPaymentsCsv()" class="dh-btn dh-btn-soft text-[12px] py-1.5 px-3 rounded-xl">
+                    📥 تصدير المدفوعات (Excel)
+                  </button>
+                </div>
                 <div class="grid-form mb-3">
-                  <input id="paymentSearch" placeholder="ابحث بالطالب أو المجموعة أو الفترة…" />
+                  <input id="paymentSearch" placeholder="🔎 ابحث برقم الدفعة المشتركة (SH-1001) أو اسم الطالب أو المجموعة أو الفترة…" />
                   <select id="paymentFilterType">
                     <option value="all">كل الدفعات</option>
                     <option value="single">فردية</option>
-                    <option value="shared">مشتركة</option>
+                    <option value="shared">مشتركة فقط</option>
                   </select>
                 </div>
                 <div id="paymentList" class="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3"></div>
@@ -1884,26 +2447,43 @@
 
             <!-- ==================== TAB 5: REPORTS / DASHBOARD (التقارير) ==================== -->
             <section id="dashboard" class="tab">
-              <div class="flex items-start justify-between gap-3 mb-4">
+              <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
                 <div>
                   <h1 class="font-display text-[26px] md:text-3xl leading-none text-primary">التقارير</h1>
                   <p class="mt-1 text-[12px] text-stone-500">حضور · حفظ · مدفوعات · إشعارات أولياء الأمور</p>
                 </div>
-                <button type="button" onclick="showTab('settings')" class="dh-btn dh-btn-outline text-[12px] px-3 py-2">
-                  ⚙️ المزامنة والإعدادات
-                </button>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button type="button" onclick="exportReportCsv()" class="dh-btn dh-btn-gold text-[12px] px-3 py-2">
+                    📥 تصدير التقرير (Excel)
+                  </button>
+                  <button type="button" onclick="showTab('settings')" class="dh-btn dh-btn-outline text-[12px] px-3 py-2">
+                    ⚙️ المزامنة والإعدادات
+                  </button>
+                </div>
               </div>
 
               <div class="card">
                 <h2>فلاتر التقارير ولوحة المتابعة</h2>
                 <div class="grid-form">
                   <label class="date-field">
-                    <span class="small">من (يوم/شهر/سنة)</span>
-                    <input type="text" id="fromDate" inputmode="numeric" maxlength="10" placeholder="يوم/شهر/سنة" />
+                    <span class="small">من تاريخ (اضغط للاختيار)</span>
+                    <div class="dh-date-picker" onclick="openNativeDatePicker('fromDate')">
+                      <div class="dh-date-display">
+                        <span>📅</span>
+                        <span id="fromDateDisplay">22/10/2026</span>
+                      </div>
+                      <input type="date" id="fromDate" lang="en-GB" dir="ltr" aria-label="من تاريخ" />
+                    </div>
                   </label>
                   <label class="date-field">
-                    <span class="small">إلى (يوم/شهر/سنة)</span>
-                    <input type="text" id="toDate" inputmode="numeric" maxlength="10" placeholder="يوم/شهر/سنة" />
+                    <span class="small">إلى تاريخ (اضغط للاختيار)</span>
+                    <div class="dh-date-picker" onclick="openNativeDatePicker('toDate')">
+                      <div class="dh-date-display">
+                        <span>📅</span>
+                        <span id="toDateDisplay">22/10/2026</span>
+                      </div>
+                      <input type="date" id="toDate" lang="en-GB" dir="ltr" aria-label="إلى تاريخ" />
+                    </div>
                   </label>
                   <button id="autoDateRange" class="dh-btn dh-btn-soft secondary" type="button" style="align-self: end; height: 46px">
                     النطاق تلقائيًا
@@ -1923,8 +2503,8 @@
                     <option value="rateLow">حضور أقل من 70%</option>
                   </select>
                   <div class="row">
-                    <input id="memoryMin" type="number" min="0" max="100" placeholder="حفظ من % (90)" />
-                    <input id="memoryMax" type="number" min="0" max="100" placeholder="حفظ إلى % (99)" />
+                    <input id="memoryMin" type="number" inputmode="numeric" pattern="[0-9]*" lang="en" dir="ltr" min="0" max="100" placeholder="حفظ من % (90)" />
+                    <input id="memoryMax" type="number" inputmode="numeric" pattern="[0-9]*" lang="en" dir="ltr" min="0" max="100" placeholder="حفظ إلى % (99)" />
                   </div>
                   <input id="reportStudentSearch" placeholder="🔎 بحث عن طالب بالاسم أو ID أو الهاتف" />
                   <select id="sortFilter">
@@ -1986,7 +2566,10 @@
                 </section>
                 <section id="detailFinancePanel" class="mt-3 hidden">
                   <div id="detailFinanceStats" class="detail-kpi-grid"></div>
-                  <div class="rounded-2xl border border-primary/10 overflow-x-auto bg-white/80 mt-3"><table class="table"><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th></tr></thead><tbody id="detailPaymentBody"></tbody></table></div>
+                  <div class="mt-3">
+                    <input id="detailPaymentSearch" type="search" placeholder="🔎 ابحث في دفعات الطالب برقم الدفعة المشتركة (SH-1001) أو الفترة أو التاريخ…" class="dh-input text-[12.5px]" oninput="renderDetailPaymentsTable()" />
+                  </div>
+                  <div class="rounded-2xl border border-primary/10 overflow-x-auto bg-white/80 mt-2.5"><table class="table"><thead><tr><th>التاريخ</th><th>البيان ورقم الدفعة</th><th>نصيب الطالب</th></tr></thead><tbody id="detailPaymentBody"></tbody></table></div>
                 </section>
                 <div id="detailWhatsappPanel" class="mt-4 rounded-2xl border border-primary/15 bg-primary/5 p-4">
                   <div class="flex items-center justify-between gap-2"><h3 class="font-display text-lg text-primary m-0">💬 إشعارات ولي الأمر</h3><span class="text-[11px] text-stone-500">تُفتح الرسالة في واتساب للمراجعة قبل الإرسال</span></div>
@@ -2027,22 +2610,30 @@
               </div>
 
               <div class="card">
-                <h2>المزامنة مع Google Sheets</h2>
+                <h2>المزامنة السريعة مع Google Sheets</h2>
                 <p class="small mb-3">
-                  التطبيق يحفظ كل شيء محليًا. عند وجود الإنترنت، يرسل السجلات إلى Google Sheets ثم يسحب أي تحديثات جديدة.
+                  المزامنة الآن خفيفة وسريعة جداً (ترفع البيانات فقط بدون إعادة تهيئة الجداول في كل مرة). يمكنك تهيئة الصفحات أو تحديث لوحة التحكم يدوياً عند الحاجة من الزرين بالأسفل أو من داخل الشيت.
                 </p>
-                <input id="syncUrl" dir="ltr" placeholder="رابط Google Apps Script Web App (ينتهي بـ /exec)" />
+                <input id="syncUrl" dir="ltr" lang="en" placeholder="رابط Google Apps Script Web App (ينتهي بـ /exec)" />
                 <div class="row mt-3">
-                  <button id="saveSync" class="dh-btn dh-btn-primary">حفظ الرابط</button>
-                  <button id="testSync" class="dh-btn dh-btn-soft">اختبار الاتصال</button>
-                  <button id="syncNow" class="dh-btn dh-btn-gold">🔄 مزامنة الآن</button>
-                  <button id="fullSyncNow" class="dh-btn dh-btn-outline">📥 مزامنة كاملة</button>
+                  <button type="button" id="saveSync" class="dh-btn dh-btn-primary">حفظ الرابط</button>
+                  <button type="button" id="testSync" class="dh-btn dh-btn-soft">اختبار الاتصال</button>
+                  <button type="button" id="syncNow" class="dh-btn dh-btn-gold">🔄 مزامنة الآن</button>
+                  <button type="button" id="fullSyncNow" class="dh-btn dh-btn-outline">📥 مزامنة كاملة</button>
+                </div>
+                <div class="row mt-2">
+                  <button type="button" onclick="triggerManualSheetAction('refreshReports')" class="dh-btn dh-btn-soft secondary text-[12.5px]">
+                    📊 تحديث لوحة التحكم وتفاصيل الطالب في الشيت (يدوي)
+                  </button>
+                  <button type="button" onclick="triggerManualSheetAction('setupSheets')" class="dh-btn dh-btn-outline secondary text-[12.5px]">
+                    ⚙️ إعداد وتنسيق صفحات الشيت (لأول مرة / يدوي)
+                  </button>
                 </div>
                 <div id="syncMessage" class="notice mt-3">لم تتم المزامنة بعد.</div>
               </div>
 
               <div class="card">
-                <h2>النسخ الاحتياطي والبيانات</h2>
+                <h2>النسخ الاحتياطي وإدارة الحذف الآمن</h2>
                 <div class="row mb-3">
                   <button type="button" class="dh-btn dh-btn-soft secondary" onclick="exportLocalBackup()">
                     💾 تحميل نسخة احتياطية (JSON)
@@ -2058,25 +2649,36 @@
                     onchange="importLocalBackup(event)"
                   />
                 </div>
-                <div class="row">
+                <div class="notice mb-3">
+                  ✅ <b>حماية بيانات الطلاب الأساسية:</b> أزرار الحذف التالية تحذف السجلات الفرعية فقط حسب اختيارك، وتبقى بيانات الطلاب الأساسية (الاسم، الـID، المجموعة، الهواتف، المصروف الشهري، وأيام الحضور) محفوظة دائماً.
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
                     type="button"
                     class="dh-btn dh-btn-danger danger"
                     id="clearRecordsBtn"
                     onclick="deleteData('records')"
                   >
-                    🗑️ مسح سجل الحضور
+                    🗑️ حذف السجلات (الحضور)
                   </button>
                   <button
                     type="button"
                     class="dh-btn dh-btn-danger danger"
-                    id="clearAllBtn"
-                    onclick="deleteData('all')"
+                    id="clearPaymentsBtn"
+                    onclick="deleteData('payments')"
                   >
-                    ⚠️ مسح كامل
+                    🗑️ حذف المدفوعات
+                  </button>
+                  <button
+                    type="button"
+                    class="dh-btn dh-btn-danger danger"
+                    id="clearWardsBtn"
+                    onclick="deleteData('wards')"
+                  >
+                    🗑️ حذف الأوراد
                   </button>
                 </div>
-                <p class="small mt-2">الحذف يحتاج رمز تأكيد عشوائي من 6 أرقام.</p>
+                <p class="small mt-2">كل عملية حذف محمية برمز تأكيد عشوائي من 6 أرقام وعبارة تأكيد مخصصة.</p>
               </div>
 
               <div class="card text-center">
@@ -2104,7 +2706,7 @@
                   <span>تواصل عبر تيليجرام</span>
                 </a>
                 <p class="small my-1">© 2026 Moaaz Emad — جميع الحقوق محفوظة.</p>
-                <p class="small mt-2 opacity-75">الإصدار 2.4.0</p>
+                <p class="small mt-2 opacity-75">الإصدار 2.5.0</p>
               </div>
             </section>
 
@@ -2113,7 +2715,7 @@
       </div>
 
       <!-- Mobile Bottom Navigation Bar -->
-      <nav class="fixed bottom-0 inset-x-0 z-20 bar-surface border-t border-primary/10 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-4px_24px_rgba(8,48,31,0.08)]">
+      <nav class="md:hidden fixed bottom-0 inset-x-0 z-20 bar-surface border-t border-primary/10 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-4px_24px_rgba(8,48,31,0.08)]">
         <div class="max-w-xl mx-auto w-full px-2">
           <div class="grid" style="grid-template-columns: repeat(6, minmax(0, 1fr));">
           <button type="button" data-mobile-nav="home" onclick="showTab('home')" class="mobile-nav-btn flex flex-col items-center justify-center gap-1 py-2.5 min-h-[54px] text-primary">
@@ -2250,6 +2852,9 @@
 
       /* ── Navigation & Tabs ── */
       function showTab(id) {
+        if (id !== "scan" && qrScanner) {
+          stopCamera();
+        }
         document.querySelectorAll(".tab").forEach((x) => x.classList.remove("active"));
         const target = $(id);
         if (target) target.classList.add("active");
@@ -2257,8 +2862,8 @@
         document.querySelectorAll(".nav-btn").forEach((btn) => {
           const active = btn.getAttribute("data-nav") === id;
           btn.className = active
-            ? "nav-btn flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 text-[13px] font-bold transition bg-primary text-white shadow-[0_10px_24px_-16px_rgba(17,78,60,0.9)]"
-            : "nav-btn flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 text-[13px] font-bold transition text-stone-600 hover:bg-primary/10";
+            ? "nav-btn w-full flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 text-[13px] font-bold transition bg-primary text-white shadow-[0_10px_24px_-16px_rgba(17,78,60,0.9)]"
+            : "nav-btn w-full flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 text-[13px] font-bold transition text-stone-600 hover:bg-primary/10";
         });
 
         document.querySelectorAll(".mobile-nav-btn").forEach((btn) => {
@@ -2379,8 +2984,13 @@
           }
           return x;
         });
+        let maxSharedNum = 1000;
+        payments.forEach((p) => {
+          const m = String(p?.paymentCode || "").match(/^SH-(\d+)$/i);
+          if (m && Number(m[1]) > maxSharedNum) maxSharedNum = Number(m[1]);
+        });
         payments = payments.map((p) => {
-          const x = { ...p };
+          const x = { ...p, id: String(p.id || crypto.randomUUID()) };
           if (Array.isArray(x.studentIds))
             x.studentIds = x.studentIds.map(String);
           else {
@@ -2390,6 +3000,21 @@
               x.totalAmount != null ? x.totalAmount : x.amount || 0;
             x.notes = x.notes != null ? x.notes : x.note || "";
             paymentsChanged = true;
+          }
+          const isSh = x.type === "shared" || x.studentIds.length > 1;
+          if (isSh && x.type !== "shared") {
+            x.type = "shared";
+            paymentsChanged = true;
+          }
+          if (isSh && !String(x.paymentCode || "").trim()) {
+            maxSharedNum++;
+            x.paymentCode = `SH-${maxSharedNum}`;
+            paymentsChanged = true;
+          }
+          const tot = Number(x.totalAmount != null ? x.totalAmount : x.amount || 0) || 0;
+          const expectedShare = x.studentIds.length > 0 ? Math.round((tot / x.studentIds.length) * 100) / 100 : tot;
+          if (x.shareAmount !== expectedShare) {
+            x.shareAmount = expectedShare;
           }
           return x;
         });
@@ -2532,8 +3157,9 @@
                     <span class="block truncate text-[13px] font-bold text-stone-800">${esc(item.student.name)}</span>
                     <span class="block text-[11px] text-stone-500">${esc(item.student.group || "بدون مجموعة")}</span>
                   </div>
-                  <div class="flex items-center gap-2 shrink-0">
+                  <div class="flex items-center gap-1.5 shrink-0">
                     <span class="text-[11px] font-bold text-amber-700">${item.lastDate ? "آخر دفعة " + formatDateDisplay(item.lastDate) : "لا توجد دفعات"}</span>
+                    <button type="button" onclick="sendPaymentReminderWhatsApp('${escAttr(item.student.id)}')" title="تذكير واتساب لولي الأمر" class="dh-btn dh-btn-outline text-[11px] py-1 px-2 rounded-xl">💬</button>
                     <button type="button" onclick="openPaymentFor('${escAttr(item.student.id)}')" class="dh-btn dh-btn-soft text-[11px] py-1 px-2.5 rounded-xl">سداد</button>
                   </div>
                 </div>`
@@ -2707,7 +3333,7 @@
                 st.present
                   ? `<div class="mt-2 flex items-center gap-2">
                       <span class="text-[11px] font-bold text-stone-500">درجة الحفظ</span>
-                      <input type="number" inputmode="numeric" min="0" max="100" value="${escAttr(st.memory)}" oninput="setQuickStudentMemory('${escAttr(s.id)}', this.value)" placeholder="اختياري" class="!w-[96px] !py-1 !px-2 text-center text-[12px] font-bold text-primary" />
+                      <input type="number" inputmode="numeric" pattern="[0-9]*" lang="en" dir="ltr" min="0" max="100" value="${escAttr(st.memory)}" oninput="setQuickStudentMemory('${escAttr(s.id)}', this.value)" placeholder="اختياري" class="!w-[96px] !py-1 !px-2 text-center text-[12px] font-bold text-primary" />
                       <span class="text-[10px] text-stone-400">من 100</span>
                     </div>`
                   : ""
@@ -2757,13 +3383,20 @@
           const entry = quickGroupDraft[id];
           const status = entry.present ? "present" : "absent";
           const rawMem = String(entry.memory ?? "").trim();
-          const memory =
-            entry.present && rawMem !== "" && !isNaN(Number(rawMem))
-              ? Math.max(0, Math.min(100, Number(rawMem)))
-              : null;
           let existing = d.records.find(
             (r) => r.date === selectedDate && String(r.studentId) === String(id)
           );
+          const existingWardScore =
+            existing && Array.isArray(existing.memorizationWards) && existing.memorizationWards.length
+              ? computeDailyWardScore(existing.memorizationWards)
+              : null;
+          const memory = !entry.present
+            ? null
+            : rawMem !== "" && !isNaN(Number(rawMem))
+              ? Math.max(0, Math.min(100, Number(rawMem)))
+              : existingWardScore !== null
+                ? existingWardScore
+                : existing?.memory ?? null;
           if (existing) {
             existing.status = status;
             existing.memory = memory;
@@ -3424,7 +4057,7 @@
         const present=records.filter(x=>x.status==='present').length;
         const payments=d.payments.filter(x=>(Array.isArray(x.studentIds)?x.studentIds.map(String):[String(x.studentId||'')]).includes(String(id))).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
         currentDetailPayments=payments;
-        const paid=payments.reduce((sum,x)=>sum+Number(x.totalAmount!=null?x.totalAmount:x.amount||0),0);
+        const paid=Math.round(payments.reduce((sum,x)=>sum+getStudentPaymentShare(x),0)*100)/100;
         currentDetailWardEntries=[];
         records.forEach(rec=>(Array.isArray(rec.memorizationWards)?rec.memorizationWards:[]).forEach(w=>{if(w&&w.surah)currentDetailWardEntries.push({...w,date:w.date||rec.date,recordId:rec.id,attendanceMemory:rec.memory});}));
         (d.memorization||[]).filter(x=>String(x.studentId)===String(id)&&x.surah).forEach(w=>currentDetailWardEntries.push({...w}));
@@ -3447,8 +4080,9 @@
         const latest=wards[0];
         $('detailWardCards').innerHTML=latest?`<div class="ward-summary-card" style="grid-column:1/-1"><div class="flex items-center justify-between gap-2"><b>آخر ورد مسجل</b><span class="text-[11px] text-stone-500">${esc(formatDateDisplay(latest.date||''))}</span></div><div class="font-display text-[18px] font-black text-primary mt-2">${esc(latest.surah)} ${latest.fromAyah&&latest.toAyah?`(${esc(latest.fromAyah)}–${esc(latest.toAyah)})`:''}</div><div class="flex flex-wrap items-center gap-2 mt-2"><span class="detail-ward-type">${esc(wardTypeLabel(latest.type))}</span><span class="detail-grade">${esc(detailGradeLabel(latest).label)}${detailGradeLabel(latest).percent==null?'':` · ${detailGradeLabel(latest).percent}%`}</span></div></div>`:'<div class="detail-empty" style="grid-column:1/-1">لم يتم تسجيل أوراد حفظ لهذا الطالب حتى الآن.</div>';
         $('detailBody').innerHTML=records.concat((st.miss||[]).map(dt=>({date:dt,status:'absent',memory:null,memorizationWards:[]}))).sort((a,b)=>String(b.date).localeCompare(String(a.date))).map(x=>{const ws=Array.isArray(x.memorizationWards)?x.memorizationWards:[];return `<tr><td class="font-bold">${esc(formatDateDisplay(x.date))}</td><td>${x.status==='present'?'<span class="text-primary font-bold">✅ حاضر</span>':'<span class="text-red-600 font-bold">❌ غائب</span>'}</td><td>${x.memory==null?'-':`<span class="detail-grade">${esc(x.memory)}%</span>`}${ws.length?`<div class="ward-badges">${ws.map(w=>`<span class="ward-badge">📖 ${esc(formatWard(w))} · ${esc(detailGradeLabel(w).label)}${detailGradeLabel(w).percent==null?'':` ${detailGradeLabel(w).percent}%`}</span>`).join('')}</div>`:''}</td></tr>`;}).join('')||'<tr><td colspan="3" class="text-center text-stone-500">لا يوجد سجل.</td></tr>';
-        $('detailFinanceStats').innerHTML=kpi(`${paid.toLocaleString('ar-EG')} ج.م`,'إجمالي المدفوع')+kpi(payments.length,'عدد الدفعات')+kpi(`${Number(s.monthlyFee||0).toLocaleString('ar-EG')} ج.م`,'المصروف الشهري','حسب قيمة المصروف المسجلة للطالب');
-        $('detailPaymentBody').innerHTML=payments.map(x=>`<tr><td>${esc(formatDateDisplay(x.date||''))}</td><td>${esc(x.note||x.notes||x.type||'دفعة')}</td><td class="font-bold">${Number(x.totalAmount!=null?x.totalAmount:x.amount||0).toLocaleString('ar-EG')} ج.م</td></tr>`).join('')||'<tr><td colspan="3" class="text-center text-stone-500">لا توجد دفعات مسجلة.</td></tr>';
+        $('detailFinanceStats').innerHTML=kpi(`${paid.toLocaleString('en-US')} ج.م`,'إجمالي نصيب الطالب المدفوع','تُقسم الدفعة المشتركة على الأعضاء')+kpi(payments.length,'عدد الدفعات')+kpi(`${Number(s.monthlyFee||0).toLocaleString('en-US')} ج.م`,'المصروف الشهري','حسب قيمة المصروف المسجلة للطالب');
+        if($('detailPaymentSearch')) $('detailPaymentSearch').value='';
+        renderDetailPaymentsTable();
         if($('detailWardSearch')) $('detailWardSearch').value=''; if($('detailWardTypeFilter')) $('detailWardTypeFilter').value=''; if($('detailWardGradeFilter')) $('detailWardGradeFilter').value='';
         renderDetailWardList(); switchStudentDetailTab('wards');
         $('studentDetail').classList.remove('hidden'); $('studentDetail').scrollIntoView({behavior:'smooth'});
@@ -3456,7 +4090,161 @@
       document.addEventListener('input',e=>{if(e.target&&e.target.id==='detailWardSearch')renderDetailWardList();});
       document.addEventListener('change',e=>{if(e.target&&['detailWardTypeFilter','detailWardGradeFilter'].includes(e.target.id))renderDetailWardList();});
 
-      /* ── WhatsApp Guardian Notifications (من واجهة دار الحافظ) ── */
+      /* ── WhatsApp Structured Templates & Guardian Notifications ── */
+      const WA_TEMPLATES_KEY = "dar_whatsapp_templates_v1";
+      const DEFAULT_WA_TEMPLATES = {
+        greeting: "السلام عليكم ورحمة الله وبركاته",
+        studentPrefix: "الطالب:",
+        signature: "إدارة دار الحافظ",
+        absenceIntro: "نفيدكم بأن",
+        absenceBody: "لم يحضر حلقة دار الحافظ يوم",
+        absenceFooter: "نرجو إبلاغنا بالسبب، ونتطلع لعودته قريباً بإذن الله.",
+        paymentIntro: "تذكير ودي من إدارة دار الحافظ بخصوص سداد الاشتراك الشهري لـ",
+        paymentFooter: "جزاكم الله خيراً على حسن تعاونكم وبارك في أولادكم.",
+        degreeIntro: "نود إطلاعكم على مستوى الحفظ لـ",
+        degreeFooter: "نسأل الله له التوفيق والسداد.",
+        reportIntro: "تقرير متابعة سريع عن",
+        reportFooter: "نشكر تعاونكم، ونرجو التواصل لأي استفسار."
+      };
+      let currentWaTemplateTab = "absence";
+
+      function getWhatsAppTemplates() {
+        try {
+          const raw = localStorage.getItem(WA_TEMPLATES_KEY);
+          if (!raw) return { ...DEFAULT_WA_TEMPLATES };
+          const parsed = JSON.parse(raw);
+          return { ...DEFAULT_WA_TEMPLATES, ...(parsed && typeof parsed === "object" ? parsed : {}) };
+        } catch (_) {
+          return { ...DEFAULT_WA_TEMPLATES };
+        }
+      }
+
+      function readWhatsAppTemplatesFromInputs() {
+        return {
+          greeting: ($("waTplGreeting")?.value ?? DEFAULT_WA_TEMPLATES.greeting).trim() || DEFAULT_WA_TEMPLATES.greeting,
+          studentPrefix: ($("waTplStudentPrefix")?.value ?? DEFAULT_WA_TEMPLATES.studentPrefix).trim() || DEFAULT_WA_TEMPLATES.studentPrefix,
+          signature: ($("waTplSignature")?.value ?? DEFAULT_WA_TEMPLATES.signature).trim() || DEFAULT_WA_TEMPLATES.signature,
+          absenceIntro: ($("waTplAbsenceIntro")?.value ?? DEFAULT_WA_TEMPLATES.absenceIntro).trim(),
+          absenceBody: ($("waTplAbsenceBody")?.value ?? DEFAULT_WA_TEMPLATES.absenceBody).trim() || DEFAULT_WA_TEMPLATES.absenceBody,
+          absenceFooter: ($("waTplAbsenceFooter")?.value ?? DEFAULT_WA_TEMPLATES.absenceFooter).trim(),
+          paymentIntro: ($("waTplPaymentIntro")?.value ?? DEFAULT_WA_TEMPLATES.paymentIntro).trim(),
+          paymentFooter: ($("waTplPaymentFooter")?.value ?? DEFAULT_WA_TEMPLATES.paymentFooter).trim(),
+          degreeIntro: ($("waTplDegreeIntro")?.value ?? DEFAULT_WA_TEMPLATES.degreeIntro).trim(),
+          degreeFooter: ($("waTplDegreeFooter")?.value ?? DEFAULT_WA_TEMPLATES.degreeFooter).trim(),
+          reportIntro: ($("waTplReportIntro")?.value ?? DEFAULT_WA_TEMPLATES.reportIntro).trim(),
+          reportFooter: ($("waTplReportFooter")?.value ?? DEFAULT_WA_TEMPLATES.reportFooter).trim()
+        };
+      }
+
+      function buildCustomWhatsAppMessage(kind, ctx = {}, customTpl = null) {
+        const tpl = customTpl || getWhatsAppTemplates();
+        const studentName = String(ctx.studentName || "طالب").trim();
+        const prefix = String(tpl.studentPrefix || "الطالب:").trim();
+        const studentLine = `${prefix} ${studentName}`.trim();
+        const lines = [];
+        if (tpl.greeting) lines.push(tpl.greeting, "");
+
+        if (kind === "absence") {
+          const dateText = ctx.dateText || formatArabicFullDate(today());
+          const firstLine = tpl.absenceIntro ? `${tpl.absenceIntro} ${studentLine}` : studentLine;
+          lines.push(firstLine);
+          lines.push(`${tpl.absenceBody} ${dateText}.`);
+          if (tpl.absenceFooter) lines.push("", tpl.absenceFooter);
+        } else if (kind === "payment") {
+          const firstLine = tpl.paymentIntro ? `${tpl.paymentIntro} ${studentLine}` : studentLine;
+          lines.push(firstLine);
+          if (ctx.groupName) lines.push(`المجموعة: ${ctx.groupName}`);
+          if (ctx.monthLine) lines.push(ctx.monthLine);
+          if (tpl.paymentFooter) lines.push("", tpl.paymentFooter);
+        } else if (kind === "degree") {
+          const firstLine = tpl.degreeIntro ? `${tpl.degreeIntro} ${studentLine}` : studentLine;
+          lines.push(firstLine);
+          lines.push(ctx.degreeLine || "لم تُسجَّل درجة حفظ بعد، وسنوافيكم بالنتيجة قريباً.");
+          if (tpl.degreeFooter) lines.push("", tpl.degreeFooter);
+        } else {
+          const firstLine = tpl.reportIntro ? `${tpl.reportIntro} ${studentLine}` : studentLine;
+          lines.push(firstLine);
+          lines.push(`المجموعة: ${ctx.groupName || "بدون مجموعة"}`);
+          lines.push(`نسبة الحضور: ${ctx.rate ?? 100}%`);
+          lines.push(`متوسط درجة الحفظ: ${ctx.avgText || "غير متاح"}`);
+          if (tpl.reportFooter) lines.push("", tpl.reportFooter);
+        }
+
+        if (tpl.signature) lines.push(tpl.signature);
+        return lines.join("\n");
+      }
+
+      function populateWhatsAppTemplateInputs(tpl) {
+        if ($("waTplGreeting")) $("waTplGreeting").value = tpl.greeting || "";
+        if ($("waTplStudentPrefix")) $("waTplStudentPrefix").value = tpl.studentPrefix || "";
+        if ($("waTplSignature")) $("waTplSignature").value = tpl.signature || "";
+        if ($("waTplAbsenceIntro")) $("waTplAbsenceIntro").value = tpl.absenceIntro || "";
+        if ($("waTplAbsenceBody")) $("waTplAbsenceBody").value = tpl.absenceBody || "";
+        if ($("waTplAbsenceFooter")) $("waTplAbsenceFooter").value = tpl.absenceFooter || "";
+        if ($("waTplPaymentIntro")) $("waTplPaymentIntro").value = tpl.paymentIntro || "";
+        if ($("waTplPaymentFooter")) $("waTplPaymentFooter").value = tpl.paymentFooter || "";
+        if ($("waTplDegreeIntro")) $("waTplDegreeIntro").value = tpl.degreeIntro || "";
+        if ($("waTplDegreeFooter")) $("waTplDegreeFooter").value = tpl.degreeFooter || "";
+        if ($("waTplReportIntro")) $("waTplReportIntro").value = tpl.reportIntro || "";
+        if ($("waTplReportFooter")) $("waTplReportFooter").value = tpl.reportFooter || "";
+      }
+
+      function switchWhatsAppTemplateTab(tab) {
+        currentWaTemplateTab = ["absence", "payment", "degree", "report"].includes(tab) ? tab : "absence";
+        document.querySelectorAll("[data-wa-tab]").forEach((btn) => {
+          const active = btn.getAttribute("data-wa-tab") === currentWaTemplateTab;
+          btn.classList.toggle("dh-btn-primary", active);
+          btn.classList.toggle("dh-btn-outline", !active);
+        });
+        ["absence", "payment", "degree", "report"].forEach((k) => {
+          const p = $("waTabPanel_" + k);
+          if (p) p.classList.toggle("hidden", k !== currentWaTemplateTab);
+        });
+        updateWhatsAppTemplatePreview();
+      }
+
+      function updateWhatsAppTemplatePreview() {
+        const previewEl = $("waTemplateLivePreview");
+        if (!previewEl) return;
+        const tpl = readWhatsAppTemplatesFromInputs();
+        const sampleCtx = {
+          studentName: "أحمد محمد علي",
+          groupName: "حلقة الفجر",
+          dateText: formatArabicFullDate(today()),
+          monthLine: `عن شهر: ${formatArabicFullDate(today()).split(" ").slice(2).join(" ") || today().slice(0, 7)} وقيمته: 150 ج.م`,
+          degreeLine: `درجة الحفظ في ${formatArabicFullDate(today())}: 95 من 100.`,
+          rate: 92,
+          avgText: "95 من 100"
+        };
+        previewEl.textContent = buildCustomWhatsAppMessage(currentWaTemplateTab, sampleCtx, tpl);
+      }
+
+      function openWhatsAppTemplatesModal(initialTab = "absence") {
+        const tpl = getWhatsAppTemplates();
+        populateWhatsAppTemplateInputs(tpl);
+        switchWhatsAppTemplateTab(initialTab);
+        $("whatsappTemplatesModal")?.classList.remove("hidden");
+      }
+
+      function closeWhatsAppTemplatesModal() {
+        $("whatsappTemplatesModal")?.classList.add("hidden");
+      }
+
+      function saveWhatsAppTemplatesFromModal() {
+        const tpl = readWhatsAppTemplatesFromInputs();
+        localStorage.setItem(WA_TEMPLATES_KEY, JSON.stringify(tpl));
+        closeWhatsAppTemplatesModal();
+        showAppToast("تم حفظ صيغ رسائل واتساب بنجاح ✓");
+      }
+
+      async function resetWhatsAppTemplatesToDefault() {
+        if (!(await appConfirm("هل تريد استعادة النصوص الافتراضية لجميع رسائل واتساب؟", "استعادة الافتراضي"))) return;
+        localStorage.removeItem(WA_TEMPLATES_KEY);
+        populateWhatsAppTemplateInputs(DEFAULT_WA_TEMPLATES);
+        updateWhatsAppTemplatePreview();
+        showAppToast("تمت استعادة النصوص الافتراضية ✓");
+      }
+
       async function sendGuardianWhatsApp(kind) {
         if (!currentDetailStudentId) return;
         const d = await data();
@@ -3490,17 +4278,50 @@
 
         let text = "";
         if (kind === "absence") {
-          text = `السلام عليكم ورحمة الله وبركاته\n\nنفيدكم بأن الطالب: ${s.name}\nلم يحضر حلقة دار الحافظ يوم ${formatArabicFullDate(today())}.\n\nنرجو إبلاغنا بالسبب، ونتطلع لعودته قريباً بإذن الله.\nإدارة دار الحافظ`;
+          text = buildCustomWhatsAppMessage("absence", {
+            studentName: s.name,
+            dateText: formatArabicFullDate(today())
+          });
         } else if (kind === "degree") {
           const degPart = lastMemoryRec
             ? `درجة الحفظ في ${formatArabicFullDate(lastMemoryRec.date)}: ${lastMemoryRec.memory} من 100.`
             : "لم تُسجَّل درجة حفظ بعد، وسنوافيكم بالنتيجة قريباً.";
-          text = `السلام عليكم ورحمة الله وبركاته\n\nالطالب: ${s.name}\n${degPart}\n\nنسأل الله له التوفيق والسداد.\nإدارة دار الحافظ`;
+          text = buildCustomWhatsAppMessage("degree", {
+            studentName: s.name,
+            degreeLine: degPart
+          });
         } else {
-          text = `السلام عليكم ورحمة الله وبركاته\n\nتقرير سريع عن الطالب: ${s.name}\nالمجموعة: ${s.group || "بدون مجموعة"}\nنسبة الحضور: ${st.rate}%\nمتوسط درجة الحفظ: ${avg === null ? "غير متاح" : avg + " من 100"}\n\nنشكر تعاونكم، ونرجو التواصل لأي استفسار.\nإدارة دار الحافظ`;
+          text = buildCustomWhatsAppMessage("report", {
+            studentName: s.name,
+            groupName: s.group || "بدون مجموعة",
+            rate: st.rate,
+            avgText: avg === null ? "غير متاح" : avg + " من 100"
+          });
         }
         window.open(`https://wa.me/${intlPhone}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
       }
+
+      function toEnglishDigits(str) {
+        return String(str ?? "")
+          .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 1632))
+          .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 1776));
+      }
+      document.addEventListener("input", (e) => {
+        const el = e.target;
+        if (!el || el.tagName !== "INPUT") return;
+        const mode = (el.getAttribute("inputmode") || "").toLowerCase();
+        const type = (el.getAttribute("type") || "").toLowerCase();
+        if (mode === "numeric" || mode === "decimal" || mode === "tel" || type === "tel" || type === "number" || el.id === "scanId" || el.id === "paymentSearch" || el.id === "studentSearch" || el.id === "reportStudentSearch") {
+          const converted = toEnglishDigits(el.value);
+          if (converted !== el.value) {
+            const pos = el.selectionStart;
+            el.value = converted;
+            try {
+              if (pos != null) el.setSelectionRange(pos, pos);
+            } catch (_) {}
+          }
+        }
+      });
 
       function formatDateDisplay(iso) {
         if (!iso) return "";
@@ -3508,13 +4329,12 @@
         return m ? `${m[3]}/${m[2]}/${m[1]}` : iso;
       }
       function parseDateInput(value) {
-        value = String(value || "").trim();
+        value = toEnglishDigits(String(value || "").trim());
         if (!value) return "";
+        let iso = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (iso) return value;
         let m = value.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-        if (!m) {
-          let iso = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-          return iso ? value : "";
-        }
+        if (!m) return "";
         let day = Number(m[1]),
           month = Number(m[2]),
           year = Number(m[3]);
@@ -3527,8 +4347,46 @@
           return "";
         return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
       }
+      function setDateControlValue(id, rawVal) {
+        const el = $(id);
+        const iso = parseDateInput(rawVal) || today();
+        if (el) el.value = iso;
+        const dispMap = {
+          recordDate: "recordDateText",
+          paymentDate: "paymentDateDisplay",
+          fromDate: "fromDateDisplay",
+          toDate: "toDateDisplay",
+        };
+        const dispEl = $(dispMap[id]);
+        if (dispEl) dispEl.textContent = formatDateDisplay(iso);
+        return iso;
+      }
+      function syncDateControlDisplay(id) {
+        const el = $(id);
+        if (!el) return;
+        const iso = parseDateInput(el.value) || today();
+        if (el.value !== iso) el.value = iso;
+        const dispMap = {
+          recordDate: "recordDateText",
+          paymentDate: "paymentDateDisplay",
+          fromDate: "fromDateDisplay",
+          toDate: "toDateDisplay",
+        };
+        const dispEl = $(dispMap[id]);
+        if (dispEl) dispEl.textContent = formatDateDisplay(iso);
+      }
+      function openNativeDatePicker(id) {
+        const el = $(id);
+        if (!el) return;
+        try {
+          if (typeof el.showPicker === "function") el.showPicker();
+          else el.focus();
+        } catch (_) {
+          el.focus();
+        }
+      }
       function getSelectedDate(id, fallback) {
-        let parsed = parseDateInput($(id).value);
+        let parsed = parseDateInput($(id)?.value);
         return parsed || fallback;
       }
 const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name":"البقرة","count":286},{"n":3,"name":"آل عمران","count":200},{"n":4,"name":"النساء","count":176},{"n":5,"name":"المائدة","count":120},{"n":6,"name":"الأنعام","count":165},{"n":7,"name":"الأعراف","count":206},{"n":8,"name":"الأنفال","count":75},{"n":9,"name":"التوبة","count":129},{"n":10,"name":"يونس","count":109},{"n":11,"name":"هود","count":123},{"n":12,"name":"يوسف","count":111},{"n":13,"name":"الرعد","count":43},{"n":14,"name":"إبراهيم","count":52},{"n":15,"name":"الحجر","count":99},{"n":16,"name":"النحل","count":128},{"n":17,"name":"الإسراء","count":111},{"n":18,"name":"الكهف","count":110},{"n":19,"name":"مريم","count":98},{"n":20,"name":"طه","count":135},{"n":21,"name":"الأنبياء","count":112},{"n":22,"name":"الحج","count":78},{"n":23,"name":"المؤمنون","count":118},{"n":24,"name":"النور","count":64},{"n":25,"name":"الفرقان","count":77},{"n":26,"name":"الشعراء","count":227},{"n":27,"name":"النمل","count":93},{"n":28,"name":"القصص","count":88},{"n":29,"name":"العنكبوت","count":69},{"n":30,"name":"الروم","count":60},{"n":31,"name":"لقمان","count":34},{"n":32,"name":"السجدة","count":30},{"n":33,"name":"الأحزاب","count":73},{"n":34,"name":"سبأ","count":54},{"n":35,"name":"فاطر","count":45},{"n":36,"name":"يس","count":83},{"n":37,"name":"الصافات","count":182},{"n":38,"name":"ص","count":88},{"n":39,"name":"الزمر","count":75},{"n":40,"name":"غافر","count":85},{"n":41,"name":"فصلت","count":54},{"n":42,"name":"الشورى","count":53},{"n":43,"name":"الزخرف","count":89},{"n":44,"name":"الدخان","count":59},{"n":45,"name":"الجاثية","count":37},{"n":46,"name":"الأحقاف","count":35},{"n":47,"name":"محمد","count":38},{"n":48,"name":"الفتح","count":29},{"n":49,"name":"الحجرات","count":18},{"n":50,"name":"ق","count":45},{"n":51,"name":"الذاريات","count":60},{"n":52,"name":"الطور","count":49},{"n":53,"name":"النجم","count":62},{"n":54,"name":"القمر","count":55},{"n":55,"name":"الرحمن","count":78},{"n":56,"name":"الواقعة","count":96},{"n":57,"name":"الحديد","count":29},{"n":58,"name":"المجادلة","count":22},{"n":59,"name":"الحشر","count":24},{"n":60,"name":"الممتحنة","count":13},{"n":61,"name":"الصف","count":14},{"n":62,"name":"الجمعة","count":11},{"n":63,"name":"المنافقون","count":11},{"n":64,"name":"التغابن","count":18},{"n":65,"name":"الطلاق","count":12},{"n":66,"name":"التحريم","count":12},{"n":67,"name":"الملك","count":30},{"n":68,"name":"القلم","count":52},{"n":69,"name":"الحاقة","count":52},{"n":70,"name":"المعارج","count":44},{"n":71,"name":"نوح","count":28},{"n":72,"name":"الجن","count":28},{"n":73,"name":"المزمل","count":20},{"n":74,"name":"المدثر","count":56},{"n":75,"name":"القيامة","count":40},{"n":76,"name":"الإنسان","count":31},{"n":77,"name":"المرسلات","count":50},{"n":78,"name":"النبأ","count":40},{"n":79,"name":"النازعات","count":46},{"n":80,"name":"عبس","count":42},{"n":81,"name":"التكوير","count":29},{"n":82,"name":"الانفطار","count":19},{"n":83,"name":"المطففين","count":36},{"n":84,"name":"الانشقاق","count":25},{"n":85,"name":"البروج","count":22},{"n":86,"name":"الطارق","count":17},{"n":87,"name":"الأعلى","count":19},{"n":88,"name":"الغاشية","count":26},{"n":89,"name":"الفجر","count":30},{"n":90,"name":"البلد","count":20},{"n":91,"name":"الشمس","count":15},{"n":92,"name":"الليل","count":21},{"n":93,"name":"الضحى","count":11},{"n":94,"name":"الشرح","count":8},{"n":95,"name":"التين","count":8},{"n":96,"name":"العلق","count":19},{"n":97,"name":"القدر","count":5},{"n":98,"name":"البينة","count":8},{"n":99,"name":"الزلزلة","count":8},{"n":100,"name":"العاديات","count":11},{"n":101,"name":"القارعة","count":11},{"n":102,"name":"التكاثر","count":8},{"n":103,"name":"العصر","count":3},{"n":104,"name":"الهمزة","count":9},{"n":105,"name":"الفيل","count":5},{"n":106,"name":"قريش","count":4},{"n":107,"name":"الماعون","count":7},{"n":108,"name":"الكوثر","count":3},{"n":109,"name":"الكافرون","count":6},{"n":110,"name":"النصر","count":3},{"n":111,"name":"المسد","count":5},{"n":112,"name":"الإخلاص","count":4},{"n":113,"name":"الفلق","count":5},{"n":114,"name":"الناس","count":6}];
@@ -3661,14 +4519,27 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
           dl.innerHTML = QURAN_SURAH_META.map(
             (x) => `<option value="${x.name}">${x.n} — ${x.name} (${x.count} آية)</option>`
           ).join("");
-        $("includeMemorization")?.addEventListener("change", (e) => {
+        $("includeMemorization")?.addEventListener("change", async (e) => {
           const panel = $("attendanceWardPanel");
           if (panel) {
             panel.classList.toggle("hidden", !e.target.checked);
             panel.hidden = !e.target.checked;
           }
-          if (e.target.checked && !$("attendanceWardList").children.length) addAttendanceWard();
+          if (e.target.checked) {
+            const suggestion = await updateNextWardSuggestionUI();
+            if (!$("attendanceWardList").children.length) {
+              if (suggestion) addAttendanceWard(suggestion);
+              else addAttendanceWard();
+            } else if (suggestion) {
+              applySuggestedNextWard(false);
+            }
+          } else {
+            $("nextWardSuggestionBanner")?.classList.add("hidden");
+          }
           updateAttendanceWardLiveSummary();
+        });
+        $("scanId")?.addEventListener("input", () => {
+          updateNextWardSuggestionUI();
         });
         $("addAttendanceWard")?.addEventListener("click", () => {
           addAttendanceWard();
@@ -3719,15 +4590,27 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
                 <option value="fixation">تثبيت / اختبار</option>
               </select>
             </label>
-            <label class="text-[12px] font-bold text-stone-600">السورة (ابحث أو اكتب)
-              <input data-field="surah" list="quranSurahOptions" autocomplete="off" placeholder="مثال: البقرة" class="mt-1" />
+            <label class="text-[12px] font-bold text-stone-600">السورة (ابحث أو اختر)
+              <div class="ward-picker-wrap mt-1">
+                <input data-field="surah" data-ward-picker="surah" autocomplete="off" placeholder="مثال: البقرة" />
+                <button type="button" class="ward-picker-toggle" data-ward-picker-btn="surah" tabindex="-1" aria-label="عرض قائمة السور">▾</button>
+                <div class="ward-picker-menu hidden" data-ward-menu="surah"></div>
+              </div>
               <span class="small block mt-0.5" data-surah-count>اختر سورة لعرض عدد آياتها</span>
             </label>
             <label class="text-[12px] font-bold text-stone-600">من آية
-              <input data-field="from" type="number" min="1" step="1" inputmode="numeric" value="1" class="mt-1" />
+              <div class="ward-picker-wrap mt-1">
+                <input data-field="from" data-ward-picker="from" type="text" inputmode="numeric" pattern="[0-9]*" lang="en" dir="ltr" autocomplete="off" value="1" class="text-center" />
+                <button type="button" class="ward-picker-toggle" data-ward-picker-btn="from" tabindex="-1" aria-label="عرض قائمة الآيات">▾</button>
+                <div class="ward-picker-menu hidden" data-ward-menu="from"></div>
+              </div>
             </label>
             <label class="text-[12px] font-bold text-stone-600">إلى آية
-              <input data-field="to" type="number" min="1" step="1" inputmode="numeric" value="1" class="mt-1" />
+              <div class="ward-picker-wrap mt-1">
+                <input data-field="to" data-ward-picker="to" type="text" inputmode="numeric" pattern="[0-9]*" lang="en" dir="ltr" autocomplete="off" value="1" class="text-center" />
+                <button type="button" class="ward-picker-toggle" data-ward-picker-btn="to" tabindex="-1" aria-label="عرض قائمة الآيات">▾</button>
+                <div class="ward-picker-menu hidden" data-ward-menu="to"></div>
+              </div>
               <span class="small block mt-0.5 text-primary font-bold ward-end-hint" data-end-hint></span>
             </label>
             <label class="text-[12px] font-bold text-stone-600">تقييم الورد
@@ -3740,7 +4623,7 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
               </select>
             </label>
             <label class="text-[12px] font-bold text-stone-600">درجة الورد %
-              <input data-field="score" type="number" min="0" max="100" step="1" inputmode="numeric" value="${initialScore}" class="mt-1" />
+              <input data-field="score" type="number" min="0" max="100" step="1" inputmode="numeric" pattern="[0-9]*" lang="en" dir="ltr" value="${initialScore}" class="mt-1 text-center" />
             </label>
             <label class="text-[12px] font-bold text-stone-600 col-span-2">ملاحظات (اختياري)
               <input data-field="notes" placeholder="ملاحظات هذا الورد" class="mt-1" />
@@ -3775,21 +4658,19 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
           item.dataset.ayahCount = String(surah.count);
           from.max = surah.count;
           to.max = surah.count;
-          from.setAttribute("list", "wardAyahChoices-" + item.dataset.wardId);
-          to.setAttribute("list", "wardAyahChoices-" + item.dataset.wardId);
-          let dl = item.querySelector("datalist");
-          if (!dl) {
-            dl = document.createElement("datalist");
-            item.appendChild(dl);
-          }
-          dl.id = "wardAyahChoices-" + item.dataset.wardId;
-          dl.innerHTML = Array.from({ length: surah.count }, (_, i) => `<option value="${i + 1}"></option>`).join("");
           countLabel.textContent = `سورة ${surah.n} · ${surah.count} آية`;
-          if (Number(from.value) > surah.count) from.value = surah.count;
-          if (Number(to.value) > surah.count) to.value = surah.count;
-          if (Number(to.value) < Number(from.value)) to.value = from.value;
-          const ayahSpan = Math.max(1, Number(to.value) - Number(from.value) + 1);
-          if (Number(to.value) === surah.count) {
+          const isTypingAyah = changed === from || changed === to;
+          if (!isTypingAyah || String(from.value).trim() !== "") {
+            if (Number(from.value) > surah.count) from.value = surah.count;
+          }
+          if (!isTypingAyah || String(to.value).trim() !== "") {
+            if (Number(to.value) > surah.count) to.value = surah.count;
+            if (!isTypingAyah && Number(to.value) < Number(from.value)) to.value = from.value;
+          }
+          const fNum = Math.max(1, Number(from.value) || 1);
+          const tNum = Math.max(fNum, Number(to.value) || fNum);
+          const ayahSpan = Math.max(1, tNum - fNum + 1);
+          if (tNum === surah.count) {
             hint.textContent = `نهاية السورة (${ayahSpan} آية)`;
           } else {
             hint.textContent = `${ayahSpan} آية (من 1 إلى ${surah.count})`;
@@ -3875,6 +4756,111 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
         }
         if ($("attendanceWardList")) $("attendanceWardList").innerHTML = "";
         if ($("attendanceWardLiveSummary")) $("attendanceWardLiveSummary").classList.add("hidden");
+        if ($("nextWardSuggestionBanner")) $("nextWardSuggestionBanner").classList.add("hidden");
+      }
+
+      /* ── Smart Next-Ward Auto-Suggestion (اقتراح تلقائي ذكي للورد التالي) ── */
+      let cachedWardSuggestion = null;
+      async function getSuggestedNextWardForStudent(studentId) {
+        const sid = toEnglishDigits(String(studentId || "").trim());
+        if (!sid) return null;
+        const d = await data();
+        const student = d.students.find((s) => String(s.id) === sid);
+        if (!student) return null;
+
+        const allEntries = [];
+        d.records
+          .filter((r) => String(r.studentId) === sid && Array.isArray(r.memorizationWards))
+          .forEach((r) => {
+            r.memorizationWards.forEach((w, idx) => {
+              const nw = normalizeWardObject(w, idx);
+              if (nw) allEntries.push({ ...nw, date: r.date, updatedAt: r.updatedAt || "", idx });
+            });
+          });
+        (d.memorization || [])
+          .filter((m) => String(m.studentId) === sid)
+          .forEach((m, idx) => {
+            const nw = normalizeWardObject(m, idx);
+            if (nw) allEntries.push({ ...nw, date: m.date, updatedAt: m.updatedAt || "", idx });
+          });
+
+        if (!allEntries.length) return null;
+        allEntries.sort(
+          (a, b) =>
+            String(b.date || "").localeCompare(String(a.date || "")) ||
+            String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")) ||
+            b.idx - a.idx
+        );
+        const lastNew = allEntries.find((w) => w.type === "new") || allEntries[0];
+        const surahMeta = findSurah(lastNew.surah);
+        if (!surahMeta) return null;
+
+        const lastFrom = Math.max(1, Number(lastNew.from ?? lastNew.fromAyah ?? 1));
+        const lastTo = Math.max(lastFrom, Number(lastNew.to ?? lastNew.toAyah ?? lastFrom));
+        const span = Math.max(5, Math.min(30, lastTo - lastFrom + 1));
+        const isCompleted = Boolean(lastNew.endsSurah) || lastTo >= surahMeta.count;
+
+        if (isCompleted) {
+          const nextSurah =
+            QURAN_SURAH_META.find((x) => x.n === surahMeta.n + 1) || QURAN_SURAH_META[0];
+          const nextTo = Math.min(nextSurah.count, span);
+          return {
+            studentName: student.name,
+            type: "new",
+            surah: nextSurah.name,
+            from: 1,
+            to: nextTo,
+            reason: `💡 اقتراح تلقائي (${student.name}): أتمّ سورة ${surahMeta.name} (${surahMeta.count} آية) ✓ — مقترح البدء في سورة ${nextSurah.name} من آية 1 إلى ${nextTo}`,
+          };
+        } else {
+          const nextFrom = lastTo + 1;
+          const nextTo = Math.min(surahMeta.count, nextFrom + span - 1);
+          return {
+            studentName: student.name,
+            type: "new",
+            surah: surahMeta.name,
+            from: nextFrom,
+            to: nextTo,
+            reason: `💡 اقتراح تلقائي (${student.name}): غير مكتملة (توقف في سورة ${surahMeta.name} عند آية ${lastTo} من ${surahMeta.count}) — مقترح استكمال سورة ${surahMeta.name} من آية ${nextFrom} إلى ${nextTo}`,
+          };
+        }
+      }
+
+      async function updateNextWardSuggestionUI() {
+        const banner = $("nextWardSuggestionBanner");
+        const txt = $("nextWardSuggestionText");
+        if (!banner || !txt) return null;
+        const sid = $("scanId")?.value;
+        const suggestion = await getSuggestedNextWardForStudent(sid);
+        cachedWardSuggestion = suggestion;
+        if (suggestion && $("includeMemorization")?.checked) {
+          txt.textContent = suggestion.reason;
+          banner.classList.remove("hidden");
+        } else {
+          banner.classList.add("hidden");
+        }
+        return suggestion;
+      }
+
+      function applySuggestedNextWard(forceOverwrite = false) {
+        if (!cachedWardSuggestion) return;
+        const list = $("attendanceWardList");
+        if (!list) return;
+        const firstItem = list.querySelector(".ward-item");
+        if (!firstItem) {
+          addAttendanceWard(cachedWardSuggestion);
+          return;
+        }
+        const curSurah = firstItem.querySelector('[data-field="surah"]')?.value.trim();
+        if (forceOverwrite || !curSurah) {
+          firstItem.querySelector('[data-field="type"]').value = cachedWardSuggestion.type || "new";
+          firstItem.querySelector('[data-field="surah"]').value = cachedWardSuggestion.surah;
+          firstItem.querySelector('[data-field="from"]').value = cachedWardSuggestion.from;
+          firstItem.querySelector('[data-field="to"]').value = cachedWardSuggestion.to;
+          refreshWardItem(firstItem);
+          updateAttendanceWardLiveSummary();
+          if (forceOverwrite) showAppToast(`تم تطبيق اقتراح سورة ${cachedWardSuggestion.surah} ✓`);
+        }
       }
 
       async function record(id, memoryValue) {
@@ -4014,9 +5000,22 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
         renderHome();
         queueSync();
       }
+      let editingPaymentId = null;
+      function nextSharedPaymentCode(payments) {
+        let maxNum = 1000;
+        (payments || []).forEach((p) => {
+          const m = String(p?.paymentCode || "").match(/^SH-(\d+)$/i);
+          if (m && Number(m[1]) > maxNum) maxNum = Number(m[1]);
+        });
+        return `SH-${maxNum + 1}`;
+      }
+      function getStudentPaymentShare(p) {
+        const ids = Array.isArray(p?.studentIds) ? p.studentIds : p?.studentId ? [p.studentId] : [];
+        const total = Number(p?.totalAmount != null ? p.totalAmount : p?.amount || 0) || 0;
+        return ids.length > 0 ? Math.round((total / ids.length) * 100) / 100 : total;
+      }
       function syncPaymentDateDisplay() {
-        const value = $("paymentDate").value;
-        $("paymentDateDisplay").textContent = value ? formatDateDisplay(value) : "اختر التاريخ";
+        syncDateControlDisplay("paymentDate");
       }
       function paymentDateISO() {
         return parseDateInput($("paymentDate").value) || today();
@@ -4040,15 +5039,20 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
         $("paymentGroup").value = s.group || "";
         await refreshPaymentStudents();
         $("paymentStudent").value = String(s.id);
+        if (s.monthlyFee && !$("paymentAmount").value) {
+          $("paymentAmount").value = String(s.monthlyFee);
+        }
         $("paymentAmount").focus();
       }
       function paymentStudentsText(p, students) {
-        return (p.studentIds || [])
-          .map(
-            (id) =>
-              students.find((s) => String(s.id) === String(id))?.name ||
-              "ID " + id,
-          )
+        const ids = p.studentIds || [];
+        const isSh = p.type === "shared" || ids.length > 1;
+        const share = getStudentPaymentShare(p);
+        return ids
+          .map((id) => {
+            const name = students.find((s) => String(s.id) === String(id))?.name || "ID " + id;
+            return isSh ? `${name} (${money(share)})` : name;
+          })
           .join("، ");
       }
       function refreshPaymentGroups(students) {
@@ -4057,19 +5061,34 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
         ].sort((a, b) => a.localeCompare(b, "ar"));
         let old = $("paymentGroup").value;
         $("paymentGroup").innerHTML =
-          '<option value="">اختر المجموعة</option>' +
+          '<option value="">كل المجموعات</option>' +
           groups
             .map((g) => `<option value="${escAttr(g)}">${esc(g)}</option>`)
             .join("");
         if (groups.includes(old)) $("paymentGroup").value = old;
       }
-      function refreshPaymentStudents() {
+      function updateSharedPaymentLivePreview() {
+        const badge = $("sharedPaymentLiveInfo");
+        if (!badge) return;
+        const checked = [...document.querySelectorAll(".sharedStudent:checked")];
+        const amt = Number($("paymentAmount")?.value || 0) || 0;
+        if (checked.length < 2) {
+          badge.textContent = `محدد حالياً: ${checked.length} — اختر طالبين أو أكثر لحساب نصيب الفرد`;
+          return;
+        }
+        const share = Math.round((amt / checked.length) * 100) / 100;
+        badge.textContent = `👥 ${checked.length} طلاب مشاركين · نصيب الفرد: ${money(share)} من إجمالي ${money(amt)}`;
+      }
+      function refreshPaymentStudents(preselectedIds = null) {
         return data().then((d) => {
           let g = $("paymentGroup").value;
           let a = d.students.filter(
             (s) => !s.archived && (!g || s.group === g),
           );
           let old = $("paymentStudent").value;
+          const prevChecked = preselectedIds
+            ? new Set(preselectedIds.map(String))
+            : new Set([...document.querySelectorAll(".sharedStudent:checked")].map((x) => String(x.value)));
           $("paymentStudent").innerHTML =
             '<option value="">اختر الطالب</option>' +
             a
@@ -4084,9 +5103,10 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
             a
               .map(
                 (s) =>
-                  `<label class="flex items-center justify-between gap-2 py-2.5 px-2 cursor-pointer hover:bg-primary/5"><span class="text-[13.5px] font-bold text-stone-800">${esc(s.name)} <span class="small font-normal">— ID ${esc(s.id)}</span></span><input type="checkbox" class="sharedStudent w-4 h-4 accent-primary" value="${escAttr(s.id)}"></label>`,
+                  `<label class="flex items-center justify-between gap-2 py-2.5 px-2 cursor-pointer hover:bg-primary/5"><span class="text-[13.5px] font-bold text-stone-800">${esc(s.name)} <span class="small font-normal">— ID ${esc(s.id)} (${esc(s.group || "بدون مجموعة")})</span></span><input type="checkbox" class="sharedStudent w-4 h-4 accent-primary" value="${escAttr(s.id)}" ${prevChecked.has(String(s.id)) ? "checked" : ""} onchange="updateSharedPaymentLivePreview()"></label>`,
               )
-              .join("") || '<span class="small block py-2">اختر مجموعة أولًا.</span>';
+              .join("") || '<span class="small block py-2">لا يوجد طلاب في هذه المجموعة.</span>';
+          updateSharedPaymentLivePreview();
         });
       }
       function togglePaymentType() {
@@ -4096,17 +5116,64 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
         if (shared) refreshPaymentStudents();
       }
       function resetPaymentForm() {
-        $("paymentDate").value = today();
-        syncPaymentDateDisplay();
+        editingPaymentId = null;
+        setDateControlValue("paymentDate", today());
         $("paymentPeriod").value = "";
         $("paymentAmount").value = "";
         $("paymentGroup").value = "";
         $("paymentStudent").value = "";
         $("paymentNotes").value = "";
+        if ($("paymentFormTitle")) $("paymentFormTitle").textContent = "تسجيل دفعة جديدة";
+        if ($("savePayment")) $("savePayment").textContent = "حفظ الدفعة";
+        if ($("editPaymentInfo")) $("editPaymentInfo").textContent = "";
         document
           .querySelectorAll(".sharedStudent")
           .forEach((x) => (x.checked = false));
         togglePaymentType();
+        updateSharedPaymentLivePreview();
+      }
+      async function editPayment(id) {
+        const d = await data();
+        const p = d.payments.find((x) => String(x.id) === String(id));
+        if (!p) return;
+        editingPaymentId = String(p.id);
+        const isShared = p.type === "shared" || (p.studentIds && p.studentIds.length > 1);
+        $("paymentType").value = isShared ? "shared" : "single";
+        setDateControlValue("paymentDate", p.date || today());
+        $("paymentPeriod").value = p.period || "";
+        $("paymentAmount").value = p.totalAmount != null ? p.totalAmount : p.amount || "";
+        $("paymentGroup").value = p.group || "";
+        $("paymentNotes").value = p.notes || "";
+        $("paymentStudent").classList.toggle("hidden", isShared);
+        $("sharedStudents").classList.toggle("hidden", !isShared);
+        await refreshPaymentStudents(p.studentIds || []);
+        if (!isShared && p.studentIds?.[0]) {
+          $("paymentStudent").value = String(p.studentIds[0]);
+        }
+        if ($("paymentFormTitle")) $("paymentFormTitle").textContent = "تعديل بيانات الدفعة";
+        if ($("savePayment")) $("savePayment").textContent = "حفظ تعديل الدفعة";
+        if ($("editPaymentInfo")) {
+          $("editPaymentInfo").textContent = isShared
+            ? `تعديل دفعة مشتركة رقم ${p.paymentCode || "—"}`
+            : `تعديل دفعة فردية`;
+        }
+        $("paymentFormCard")?.scrollIntoView({ behavior: "smooth" });
+      }
+      async function deletePayment(id) {
+        const d = await data();
+        const p = d.payments.find((x) => String(x.id) === String(id));
+        if (!p) return;
+        const isShared = p.type === "shared" || (p.studentIds && p.studentIds.length > 1);
+        const label = isShared ? `الدفعة المشتركة ${p.paymentCode || ""}` : "الدفعة الفردية";
+        if (!(await appConfirm(`هل تريد حذف ${label} بقيمة ${money(p.totalAmount)}؟ سيتم حذفها من الجهاز ومن Google Sheets عند المزامنة.`, "تأكيد حذف الدفعة"))) return;
+        d.payments = d.payments.filter((x) => String(x.id) !== String(id));
+        await set("payments", d.payments);
+        await queueDeletedId("deleted_payments", String(id));
+        if (editingPaymentId === String(id)) resetPaymentForm();
+        showAppToast("تم حذف الدفعة بنجاح ✓");
+        await Promise.all([renderPayments(), renderReport(), renderHome()]);
+        if (currentDetailStudentId) showStudentDetail(currentDetailStudentId);
+        queueSync();
       }
       async function savePayment() {
         let d = await data(),
@@ -4129,33 +5196,59 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
             "الدفعة المشتركة يجب أن تضم طالبين أو أكثر.",
             "بيانات ناقصة",
           );
-        let amount = Number($("paymentAmount").value);
+        let amount = Number(toEnglishDigits($("paymentAmount").value));
         if (!Number.isFinite(amount) || amount < 0)
           return await appAlert("اكتب إجمالي مبلغ صحيح.", "مبلغ غير صحيح");
-        let p = {
-          id: crypto.randomUUID(),
-          date: paymentDateISO(),
-          period:
-            $("paymentPeriod").value.trim() ||
-            formatDateDisplay(paymentDateISO()),
-          type,
-          studentIds: ids,
-          totalAmount: amount,
-          group: $("paymentGroup").value.trim(),
-          notes: $("paymentNotes").value.trim(),
-          updatedAt: now(),
-          synced: false,
-        };
-        d.payments.push(p);
+        const shareAmount = Math.round((amount / ids.length) * 100) / 100;
+        const isEditing = Boolean(editingPaymentId);
+        let existing = isEditing ? d.payments.find((x) => String(x.id) === String(editingPaymentId)) : null;
+        const paymentCode =
+          type === "shared"
+            ? existing?.paymentCode || nextSharedPaymentCode(d.payments)
+            : "";
+
+        if (existing) {
+          existing.date = paymentDateISO();
+          existing.period = $("paymentPeriod").value.trim() || formatDateDisplay(paymentDateISO());
+          existing.type = type;
+          existing.paymentCode = paymentCode;
+          existing.studentIds = ids;
+          existing.totalAmount = amount;
+          existing.shareAmount = shareAmount;
+          existing.group = $("paymentGroup").value.trim();
+          existing.notes = $("paymentNotes").value.trim();
+          existing.updatedAt = now();
+          existing.synced = false;
+        } else {
+          let p = {
+            id: crypto.randomUUID(),
+            paymentCode,
+            date: paymentDateISO(),
+            period:
+              $("paymentPeriod").value.trim() ||
+              formatDateDisplay(paymentDateISO()),
+            type,
+            studentIds: ids,
+            totalAmount: amount,
+            shareAmount,
+            group: $("paymentGroup").value.trim(),
+            notes: $("paymentNotes").value.trim(),
+            updatedAt: now(),
+            synced: false,
+          };
+          d.payments.push(p);
+        }
         await set("payments", d.payments);
-        await appAlert(
-          `تم تسجيل ${type === "shared" ? "دفعة مشتركة" : "دفعة فردية"} بقيمة ${money(amount)} كعملية واحدة.`,
-          "تم تسجيل الدفعة",
+        showAppToast(
+          type === "shared"
+            ? `تم حفظ دفعة مشتركة (${paymentCode}) — نصيب الفرد ${money(shareAmount)} ✓`
+            : `تم حفظ دفعة فردية بقيمة ${money(amount)} ✓`
         );
         resetPaymentForm();
         renderPayments();
         renderReport();
         renderHome();
+        if (currentDetailStudentId) showStudentDetail(currentDetailStudentId);
         queueSync();
       }
       const moneyEGP = money;
@@ -4173,11 +5266,15 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
               (
                 names +
                 " " +
+                (p.paymentCode || "") +
+                " " +
                 (p.group || "") +
                 " " +
                 (p.period || "") +
                 " " +
-                (p.date || "")
+                (p.date || "") +
+                " " +
+                (p.notes || "")
               )
                 .toLowerCase()
                 .includes(q)
@@ -4193,26 +5290,39 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
         $("paymentList").innerHTML =
           a
             .map((p) => {
-              const isShared = p.type === "shared" || (p.studentIds && p.studentIds.length > 1);
+              const ids = Array.isArray(p.studentIds) ? p.studentIds : [];
+              const isShared = p.type === "shared" || ids.length > 1;
+              const share = getStudentPaymentShare(p);
               return `
-              <div class="rounded-[22px] border border-primary/10 bg-white/90 p-4">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0">
-                    <div class="flex flex-wrap items-center gap-2">
-                      <span class="rounded-full px-2.5 py-0.5 text-[10.5px] font-bold ${
-                        isShared ? "bg-secondary/20 text-secondary" : "bg-primary/10 text-primary"
-                      }">${isShared ? "دفعة مشتركة" : "دفعة فردية"}</span>
-                      <span class="text-[11px] text-stone-500">${esc(formatDateDisplay(p.date))}</span>
-                      ${p.group ? `<span class="text-[11px] font-bold text-primary/70">· ${esc(p.group)}</span>` : ""}
+              <div class="rounded-[22px] border border-primary/10 bg-white/90 p-4 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <div class="flex flex-wrap items-center gap-1.5">
+                        <span class="rounded-full px-2.5 py-0.5 text-[10.5px] font-bold ${
+                          isShared ? "bg-secondary/20 text-secondary" : "bg-primary/10 text-primary"
+                        }">${isShared ? `دفعة مشتركة ${p.paymentCode ? "#" + esc(p.paymentCode) : ""}` : "دفعة فردية"}</span>
+                        <span class="text-[11px] text-stone-500">${esc(formatDateDisplay(p.date))}</span>
+                        ${p.group ? `<span class="text-[11px] font-bold text-primary/70">· ${esc(p.group)}</span>` : ""}
+                      </div>
+                      <p class="mt-1.5 font-bold text-[15px] text-stone-800 truncate">${esc(p.period || "دفعة")}</p>
+                      <p class="mt-0.5 text-[12px] text-stone-600 leading-relaxed">${esc(paymentStudentsText(p, d.students))}</p>
                     </div>
-                    <p class="mt-1.5 font-bold text-[15px] text-stone-800 truncate">${esc(p.period || "دفعة")}</p>
-                    <p class="mt-0.5 text-[12px] text-stone-500">${esc(paymentStudentsText(p, d.students))}</p>
+                    <div class="shrink-0 text-end">
+                      <p class="font-display text-xl text-primary leading-none">${money(p.totalAmount)}</p>
+                      ${
+                        isShared
+                          ? `<span class="mt-1 inline-block rounded-lg bg-secondary/15 px-2 py-0.5 text-[11px] font-bold text-secondary">نصيب الفرد: ${money(share)}</span>`
+                          : ""
+                      }
+                    </div>
                   </div>
-                  <div class="shrink-0 text-end">
-                    <p class="font-display text-xl text-primary leading-none">${money(p.totalAmount)}</p>
-                  </div>
+                  ${p.notes ? `<p class="mt-2 rounded-xl bg-primary/5 px-3 py-2 text-[12px] text-stone-600">${esc(p.notes)}</p>` : ""}
                 </div>
-                ${p.notes ? `<p class="mt-2 rounded-xl bg-primary/5 px-3 py-2 text-[12px] text-stone-600">${esc(p.notes)}</p>` : ""}
+                <div class="mt-3 pt-2.5 border-t border-primary/10 flex items-center justify-end gap-1.5">
+                  <button type="button" onclick="editPayment('${escAttr(p.id)}')" class="dh-btn dh-btn-soft text-[11.5px] py-1 px-2.5 rounded-xl">✏️ تعديل</button>
+                  <button type="button" onclick="deletePayment('${escAttr(p.id)}')" class="dh-btn dh-btn-danger text-[11.5px] py-1 px-2.5 rounded-xl">🗑️ حذف</button>
+                </div>
               </div>`;
             })
             .join("") ||
@@ -4225,17 +5335,39 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
       let pendingDeleteKind = null,
         pendingDeleteCode = null,
         pendingDeletePhrase = null;
+      function addPendingClearKind(kind) {
+        try {
+          const cur = JSON.parse(localStorage.getItem("pending_clear_list") || "[]");
+          if (!cur.includes(kind)) cur.push(kind);
+          localStorage.setItem("pending_clear_list", JSON.stringify(cur));
+        } catch (_) {
+          localStorage.setItem("pending_clear", kind);
+        }
+      }
       function deleteData(kind) {
-        if (kind !== "records" && kind !== "all") return;
+        if (!["records", "payments", "wards"].includes(kind)) return;
         pendingDeleteKind = kind;
         pendingDeleteCode = String(Math.floor(100000 + Math.random() * 900000));
-        pendingDeletePhrase = kind === "records" ? "حذف الحضور" : "حذف الكل";
-        $("deleteConfirmTitle").textContent =
-          kind === "records" ? "تأكيد مسح سجل الحضور" : "تأكيد المسح الكامل";
-        $("deleteConfirmDescription").textContent =
-          kind === "records"
-            ? "سيتم حذف سجلات الحضور من هذا الجهاز، ثم من Google Sheets عند الاتصال. لن تُحذف بيانات الطلاب أو الدفعات."
-            : "سيتم حذف الطلاب وسجلات الحضور والدفعات من هذا الجهاز، ثم من Google Sheets عند الاتصال. هذا الإجراء لا يمكن التراجع عنه.";
+        const meta = {
+          records: {
+            phrase: "حذف السجلات",
+            title: "تأكيد حذف سجلات الحضور والغياب",
+            desc: "سيتم حذف سجلات الحضور والغياب فقط من الجهاز ومن Google Sheets. ستظل بيانات الطلاب الأساسية والمدفوعات والأوراد محفوظة تماماً.",
+          },
+          payments: {
+            phrase: "حذف المدفوعات",
+            title: "تأكيد حذف سجل المدفوعات",
+            desc: "سيتم حذف جميع الدفعات المالية المسجلة فقط من الجهاز ومن Google Sheets. ستظل بيانات الطلاب الأساسية والمصروف الشهري وسجلات الحضور والأوراد محفوظة تماماً.",
+          },
+          wards: {
+            phrase: "حذف الأوراد",
+            title: "تأكيد حذف سجل الأوراد",
+            desc: "سيتم حذف جميع أوراد الحفظ والمراجعة فقط من الجهاز ومن Google Sheets. ستظل بيانات الطلاب الأساسية وسجلات الحضور والمدفوعات محفوظة تماماً.",
+          },
+        }[kind];
+        pendingDeletePhrase = meta.phrase;
+        $("deleteConfirmTitle").textContent = meta.title;
+        $("deleteConfirmDescription").textContent = meta.desc;
         $("deleteConfirmCode").textContent = pendingDeleteCode;
         $("deleteConfirmPhrase").textContent = pendingDeletePhrase;
         $("deleteConfirmCodeInput").value = "";
@@ -4253,7 +5385,7 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
       async function confirmDeleteData() {
         if (!pendingDeleteKind) return;
         if (
-          String($("deleteConfirmCodeInput").value).trim() !== pendingDeleteCode
+          toEnglishDigits(String($("deleteConfirmCodeInput").value).trim()) !== pendingDeleteCode
         ) {
           $("deleteConfirmError").textContent =
             "رمز التأكيد غير صحيح؛ لم يتم حذف أي بيانات.";
@@ -4267,25 +5399,62 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
             "عبارة التأكيد غير صحيحة؛ لم يتم حذف أي بيانات.";
           return;
         }
-        const kind = pendingDeleteKind,
-          label = kind === "records" ? "مسح سجل الحضور" : "المسح الكامل";
+        const kind = pendingDeleteKind;
+        const label =
+          kind === "records"
+            ? "حذف سجلات الحضور"
+            : kind === "payments"
+              ? "حذف سجل المدفوعات"
+              : "حذف سجل الأوراد";
         $("deleteConfirmSubmit").disabled = true;
         $("deleteConfirmSubmit").textContent = "جاري الحذف…";
         $("deleteConfirmError").textContent = "";
         try {
+          const d = await data();
           if (kind === "records") {
+            const preservedMem = [...(d.memorization || [])];
+            d.records.forEach((r) => {
+              if (Array.isArray(r.memorizationWards) && r.memorizationWards.length) {
+                r.memorizationWards.forEach((w, idx) => {
+                  const nw = normalizeWardObject(w, idx);
+                  if (nw) {
+                    preservedMem.push({
+                      ...nw,
+                      id: String(nw.id || crypto.randomUUID()),
+                      studentId: String(r.studentId),
+                      date: r.date,
+                      updatedAt: r.updatedAt || now(),
+                      synced: true,
+                    });
+                  }
+                });
+              }
+            });
+            await set("memorization", preservedMem);
             await set("records", []);
-            localStorage.setItem("pending_clear", "records");
-          } else {
-            await set("records", []);
+            await set("deleted_records", []);
+            addPendingClearKind("records");
+          } else if (kind === "payments") {
             await set("payments", []);
-            await set("students", []);
-            await set("memorization", []);
-            localStorage.setItem("pending_clear", "all");
-            localStorage.removeItem("report_dates_manual");
-            localStorage.removeItem("dar_current_group");
-            resetStudentForm();
+            await set("deleted_payments", []);
             resetPaymentForm();
+            addPendingClearKind("payments");
+          } else if (kind === "wards") {
+            await set("memorization", []);
+            await set("deleted_wards", []);
+            let recChanged = false;
+            const stamp = now();
+            d.records.forEach((r) => {
+              if (Array.isArray(r.memorizationWards) && r.memorizationWards.length) {
+                r.memorizationWards = [];
+                r.updatedAt = stamp;
+                r.synced = false;
+                recChanged = true;
+              }
+            });
+            if (recChanged) await set("records", d.records);
+            resetAttendanceWards();
+            addPendingClearKind("wards");
           }
           closeDeleteConfirm();
           await Promise.all([
@@ -4293,15 +5462,16 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
             renderStudents(),
             renderReport(),
             renderPayments(),
+            renderMemorization(),
             renderHome(),
           ]);
           setSyncMessage(
-            `${label} تم على هذا الجهاز ✓${navigator.onLine && getSyncUrl() ? " — جاري تحديث Google Sheets…" : " — سيُحدّث Google Sheets عند عودة الاتصال."}`,
+            `${label} تم على هذا الجهاز (بيانات الطلاب الأساسية محفوظة ✓)${navigator.onLine && getSyncUrl() ? " — جاري تحديث Google Sheets…" : " — سيُحدّث Google Sheets عند عودة الاتصال."}`,
           );
           if (navigator.onLine && getSyncUrl()) {
             try {
               await processPendingClear();
-              setSyncMessage(`${label} تم بنجاح على الجهاز وGoogle Sheets ✓`);
+              setSyncMessage(`${label} تم بنجاح على الجهاز وGoogle Sheets (بيانات الطلاب محفوظة ✓)`);
             } catch (e) {
               setSyncMessage(
                 `${label} تم على الجهاز، لكن تعذر تحديث Google Sheets الآن. سيُعاد المحاولة مع المزامنة التالية. (${e.message})`,
@@ -4337,15 +5507,37 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
       });
 
       async function processPendingClear() {
-        const pending = localStorage.getItem("pending_clear");
-        if (!pending) return;
         const base = getSyncUrl().trim().replace(/\/$/, "");
         if (!base) return;
-        const action = pending === "all" ? "clearAll" : "clearRecords";
-        const res = await jsonp(base + "?action=" + action);
-        if (!res.success)
-          throw new Error(res.message || "فشل حذف البيانات من Google Sheets");
-        localStorage.removeItem("pending_clear");
+        let list = [];
+        try {
+          list = JSON.parse(localStorage.getItem("pending_clear_list") || "[]");
+        } catch (_) {}
+        const legacy = localStorage.getItem("pending_clear");
+        if (legacy && !list.includes(legacy)) list.push(legacy);
+        if (!list.length) return;
+        const actionMap = {
+          records: "clearRecords",
+          payments: "clearPayments",
+          wards: "clearWards",
+          all: "clearAll",
+        };
+        const remaining = [];
+        for (const kind of list) {
+          const action = actionMap[kind];
+          if (!action) continue;
+          const res = await postOrJsonpGas(base, { action });
+          if (!res?.success) {
+            remaining.push(kind);
+          }
+        }
+        if (remaining.length) {
+          localStorage.setItem("pending_clear_list", JSON.stringify(remaining));
+          throw new Error("تعذر إتمام بعض عمليات الحذف على Google Sheets");
+        } else {
+          localStorage.removeItem("pending_clear_list");
+          localStorage.removeItem("pending_clear");
+        }
       }
 
       async function renderToday() {
@@ -4390,15 +5582,22 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
                     <span class="text-[11px] text-stone-500">${esc(st?.group || "بدون مجموعة")} · ID: ${esc(x.studentId)}</span>
                   </div>
                 </div>
-                <div class="flex items-center gap-2 shrink-0">
+                <div class="flex flex-wrap items-center justify-end gap-1.5 shrink-0">
                   ${
                     x.memory != null
-                      ? `<span class="rounded-lg bg-secondary/20 px-2.5 py-1 text-[11.5px] font-bold text-secondary">حفظ: ${x.memory}%</span>`
+                      ? `<span class="rounded-lg bg-secondary/20 px-2 py-1 text-[11px] font-bold text-secondary">حفظ: ${x.memory}%</span>`
                       : ""
                   }
-                  <span class="rounded-xl px-2.5 py-1 text-[11.5px] font-bold ${
-                    isPresent ? "bg-primary/10 text-primary" : "bg-red-50 text-red-600"
-                  }">${isPresent ? "حاضر" : "غائب"}</span>
+                  <button type="button" onclick="toggleTodayRecordStatus('${escAttr(x.id)}')" title="انقر لتبديل الحالة (حاضر ⇄ غائب)" class="rounded-xl px-2.5 py-1 text-[11.5px] font-bold transition ${
+                    isPresent ? "bg-primary/10 text-primary hover:bg-primary/20" : "bg-red-50 text-red-600 hover:bg-red-100"
+                  }">${isPresent ? "✓ حاضر" : "✕ غائب"} ⇄</button>
+                  ${
+                    !isPresent
+                      ? `<button type="button" onclick="sendAbsenceWhatsAppDirect('${escAttr(x.studentId)}', '${escAttr(x.date)}')" title="إبلاغ ولي الأمر بالغياب عبر واتساب" class="dh-btn dh-btn-outline text-[11px] py-1 px-2 rounded-xl">💬</button>`
+                      : ""
+                  }
+                  <button type="button" onclick="loadRecordIntoForm('${escAttr(x.id)}')" title="تعديل الدرجة أو الأوراد" class="dh-btn dh-btn-soft text-[11px] py-1 px-2 rounded-xl">✏️</button>
+                  <button type="button" onclick="deleteSingleAttendanceRecord('${escAttr(x.id)}')" title="حذف هذا التسجيل" class="dh-btn dh-btn-danger text-[11px] py-1 px-2 rounded-xl">🗑️</button>
                 </div>
               </div>
               ${
@@ -4418,8 +5617,8 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
           .sort();
         const from = dates.length ? dates[0] : today();
         const to = dates.length ? dates[dates.length - 1] : today();
-        $("fromDate").value = formatDateDisplay(from);
-        $("toDate").value = formatDateDisplay(to);
+        setDateControlValue("fromDate", from);
+        setDateControlValue("toDate", to);
       }
       function resetReportDateRange() {
         localStorage.removeItem("report_dates_manual");
@@ -4648,8 +5847,25 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
       }
       let lastQrValue = "",
         lastQrAt = 0;
+      async function stopCamera() {
+        if (!qrScanner) return;
+        try {
+          await qrScanner.stop();
+          qrScanner.destroy?.();
+        } catch (_) {}
+        qrScanner = null;
+        if ($("startCam")) {
+          $("startCam").textContent = "📷 تشغيل الكاميرا";
+          $("startCam").classList.remove("dh-btn-danger");
+          $("startCam").classList.add("dh-btn-soft");
+        }
+      }
       async function startCamera() {
-        if (qrScanner) return;
+        if (qrScanner) {
+          await stopCamera();
+          setScan("تم إيقاف الكاميرا.");
+          return;
+        }
         try {
           if (!window.QrScanner) {
             setScan(
@@ -4661,15 +5877,16 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
           qrScanner = new QrScanner(
             $("video"),
             (result) => {
-              let value = String(
-                typeof result === "string" ? result : result.data || "",
-              ).trim();
+              let value = toEnglishDigits(
+                String(typeof result === "string" ? result : result.data || "").trim()
+              );
               if (!value) return;
               let nowMs = Date.now();
               if (value === lastQrValue && nowMs - lastQrAt < 1800) return;
               lastQrValue = value;
               lastQrAt = nowMs;
               $("scanId").value = value;
+              updateNextWardSuggestionUI();
               record(value, $("memoryInput").value);
             },
             {
@@ -4680,7 +5897,12 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
             },
           );
           await qrScanner.start();
-          setScan("وجّه الكاميرا إلى QR الطالب…");
+          if ($("startCam")) {
+            $("startCam").textContent = "⏹️ إيقاف الكاميرا";
+            $("startCam").classList.remove("dh-btn-soft");
+            $("startCam").classList.add("dh-btn-danger");
+          }
+          setScan("وجّه الكاميرا إلى QR الطالب… (اضغط «إيقاف الكاميرا» عند الانتهاء)");
         } catch (e) {
           qrScanner = null;
           setScan("تعذر تشغيل قارئ QR: " + (e?.message || e), "bad");
@@ -4777,10 +5999,30 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
           }
         } catch (_) {}
         if (bodyObj.action === "sync") {
-          const p = encodePayload(bodyObj.payload || {});
-          return await jsonp(
-            base + "?action=sync&payload=" + encodeURIComponent(p),
-          );
+          const pl = bodyObj.payload || {};
+          const sList = [...(pl.students || [])];
+          const rList = [...(pl.records || [])];
+          const pList = [...(pl.payments || [])];
+          let delR = [...(pl.deletedRecords || [])];
+          let delP = [...(pl.deletedPayments || [])];
+          let delW = [...(pl.deletedWards || [])];
+          let lastRes = { success: true };
+          while (sList.length || rList.length || pList.length || delR.length || delP.length || delW.length) {
+            const chunk = {
+              students: sList.splice(0, 4),
+              records: rList.splice(0, 4),
+              payments: pList.splice(0, 4),
+              deletedRecords: delR.splice(0, 20),
+              deletedPayments: delP.splice(0, 20),
+              deletedWards: delW.splice(0, 20),
+            };
+            const encoded = encodePayload(chunk);
+            lastRes = await jsonp(
+              base + "?action=sync&payload=" + encodeURIComponent(encoded),
+            );
+            if (!lastRes?.success) return lastRes;
+          }
+          return lastRes;
         }
         if (bodyObj.action === "pull") {
           return await jsonp(
@@ -4794,8 +6036,106 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
         );
       }
 
+      async function queueDeletedId(storeKey, id) {
+        const list = (await get(storeKey)) || [];
+        if (!list.includes(String(id))) {
+          list.push(String(id));
+          await set(storeKey, list);
+        }
+      }
+
+      async function triggerManualSheetAction(action) {
+        const base = getSyncUrl().trim().replace(/\/$/, "");
+        if (!base) return appAlert("ضع رابط Google Apps Script أولاً ثم احفظه.");
+        const isSetup = action === "setupSheets";
+        setSyncMessage(isSetup ? "جاري إعداد وتنسيق صفحات Google Sheets…" : "جاري تحديث لوحة التحكم وتفاصيل الطالب في الشيت…");
+        try {
+          const res = await postOrJsonpGas(base, { action });
+          if (!res?.success) throw new Error(res?.message || "تعذر تنفيذ الإجراء");
+          const msg = isSetup
+            ? "تم إعداد وتنسيق صفحات الشيت بنجاح ✓"
+            : "تم تحديث لوحة التحكم وتفاصيل الطالب في الشيت ✓";
+          setSyncMessage(msg);
+          showAppToast(msg);
+        } catch (e) {
+          setSyncMessage("فشل تنفيذ الإجراء اليدوي: " + e.message, false);
+        }
+      }
+
+      let syncQueuedWhileBusy = false;
+
+      function toEpochMs(v) {
+        if (!v) return 0;
+        const t = Date.parse(String(v).trim());
+        return Number.isFinite(t) ? t : 0;
+      }
+
+      function isNewerTimestamp(candidate, baseline) {
+        if (!baseline) return Boolean(candidate);
+        if (!candidate) return false;
+        const cMs = toEpochMs(candidate);
+        const bMs = toEpochMs(baseline);
+        if (cMs && bMs) return cMs > bMs;
+        return String(candidate || "") > String(baseline || "");
+      }
+
+      // تحديث ذري آمن: يقرأ أحدث نسخة من IndexedDB قبل وضع علامة synced=true
+      // حتى لا يتم أبدًا مسح أو الكتابة فوق أي تعديل أجراه المستخدم أثناء عمل المزامنة في الخلفية.
+      async function markBatchSyncedAtomically(sSentMap, rSentMap, pSentMap) {
+        const fresh = await data();
+        let sChanged = false,
+          rChanged = false,
+          pChanged = false;
+        if (sSentMap && sSentMap.size) {
+          fresh.students.forEach((s) => {
+            const id = String(s.id);
+            if (
+              sSentMap.has(id) &&
+              String(s.updatedAt || "") === sSentMap.get(id) &&
+              s.synced !== true
+            ) {
+              s.synced = true;
+              sChanged = true;
+            }
+          });
+          if (sChanged) await set("students", fresh.students);
+        }
+        if (rSentMap && rSentMap.size) {
+          fresh.records.forEach((r) => {
+            const id = String(r.id);
+            if (
+              rSentMap.has(id) &&
+              String(r.updatedAt || "") === rSentMap.get(id) &&
+              r.synced !== true
+            ) {
+              r.synced = true;
+              rChanged = true;
+            }
+          });
+          if (rChanged) await set("records", fresh.records);
+        }
+        if (pSentMap && pSentMap.size) {
+          fresh.payments.forEach((p) => {
+            const id = String(p.id);
+            if (
+              pSentMap.has(id) &&
+              String(p.updatedAt || "") === pSentMap.get(id) &&
+              p.synced !== true
+            ) {
+              p.synced = true;
+              pChanged = true;
+            }
+          });
+          if (pChanged) await set("payments", fresh.payments);
+        }
+        return fresh;
+      }
+
       async function syncNow() {
-        if (syncBusy) return;
+        if (syncBusy) {
+          syncQueuedWhileBusy = true;
+          return;
+        }
         const base = getSyncUrl().trim().replace(/\/$/, "");
         if (!base)
           return setSyncMessage("ضع رابط Google Apps Script أولًا.", false);
@@ -4806,46 +6146,60 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
           if (!ping?.success)
             throw new Error("Google Apps Script لم يرجع استجابة صحيحة");
           await processPendingClear();
-          let d = await data();
-          let pendingStudents = d.students.filter((x) => x.synced === false);
-          let pendingRecords = d.records.filter((x) => x.synced !== true);
-          let pendingPayments = d.payments.filter((x) => x.synced !== true);
           let totalR = 0,
             totalP = 0,
             totalS = 0;
-          while (
-            pendingStudents.length ||
-            pendingRecords.length ||
-            pendingPayments.length
-          ) {
-            let sb = pendingStudents.splice(0, 5);
-            let rb = pendingRecords.splice(0, 5);
-            let pb = pendingPayments.splice(0, 5);
+
+          // حلقة رفع سريعة جداً (50 سجل في الدفعة عبر POST) مع دعم حذف العناصر المفردة
+          let safetyLoops = 0;
+          while (safetyLoops++ < 100) {
+            let current = await data();
+            let pendingStudents = current.students.filter((x) => x.synced === false);
+            let pendingRecords = current.records.filter((x) => x.synced !== true);
+            let pendingPayments = current.payments.filter((x) => x.synced !== true);
+            let delRecords = (await get("deleted_records")) || [];
+            let delPayments = (await get("deleted_payments")) || [];
+            let delWards = (await get("deleted_wards")) || [];
+            if (
+              !pendingStudents.length &&
+              !pendingRecords.length &&
+              !pendingPayments.length &&
+              !delRecords.length &&
+              !delPayments.length &&
+              !delWards.length
+            ) {
+              break;
+            }
+            let sb = pendingStudents.slice(0, 50);
+            let rb = pendingRecords.slice(0, 50);
+            let pb = pendingPayments.slice(0, 50);
+            const sSentMap = new Map(sb.map((x) => [String(x.id), String(x.updatedAt || "")]));
+            const rSentMap = new Map(rb.map((x) => [String(x.id), String(x.updatedAt || "")]));
+            const pSentMap = new Map(pb.map((x) => [String(x.id), String(x.updatedAt || "")]));
+
             let res = await postOrJsonpGas(base, {
               action: "sync",
-              payload: { students: sb, records: rb, payments: pb },
+              payload: {
+                students: sb,
+                records: rb,
+                payments: pb,
+                deletedRecords: delRecords,
+                deletedPayments: delPayments,
+                deletedWards: delWards,
+              },
             });
             if (!res?.success)
               throw new Error(res?.message || "فشل إرسال البيانات");
-            const ss = new Set(sb.map((x) => String(x.id)));
-            d.students.forEach((s) => {
-              if (ss.has(String(s.id))) s.synced = true;
-            });
-            const rs = new Set(rb.map((x) => String(x.id)));
-            d.records.forEach((r) => {
-              if (rs.has(String(r.id))) r.synced = true;
-            });
-            const ps = new Set(pb.map((x) => String(x.id)));
-            d.payments.forEach((p) => {
-              if (ps.has(String(p.id))) p.synced = true;
-            });
+
+            await markBatchSyncedAtomically(sSentMap, rSentMap, pSentMap);
+            if (delRecords.length) await set("deleted_records", []);
+            if (delPayments.length) await set("deleted_payments", []);
+            if (delWards.length) await set("deleted_wards", []);
             totalS += sb.length;
             totalR += rb.length;
             totalP += pb.length;
-            await set("students", d.students);
-            await set("records", d.records);
-            await set("payments", d.payments);
           }
+
           let cursor = (await get("syncCursor")) || "";
           let pull = await postOrJsonpGas(base, {
             action: "pull",
@@ -4853,8 +6207,12 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
           });
           if (!pull?.success)
             throw new Error(pull?.message || "فشل جلب التحديثات");
-          mergePulledData(d, pull);
-          await saveMergedData(d, pull);
+
+          // قراءة أحدث نسخة من IndexedDB مباشرةً قبل الدمج لحماية أي تعديل تم أثناء انتظار الـ pull
+          let freshBeforeMerge = await data();
+          mergePulledData(freshBeforeMerge, pull, { protectUnsynced: true });
+          await saveMergedData(freshBeforeMerge, pull);
+
           setSyncMessage(
             `تمت المزامنة ✓ — أُرسل (${totalS} طالب، ${totalR} حضور، ${totalP} دفعة)`,
           );
@@ -4862,40 +6220,83 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
           renderStudents();
           renderReport();
           renderPayments();
+          renderMemorization();
           renderHome();
         } catch (e) {
           setSyncMessage("فشلت المزامنة: " + e.message, false);
         } finally {
           syncBusy = false;
+          try {
+            const afterSyncData = await data();
+            const stillHasUnsynced =
+              afterSyncData.students.some((x) => x.synced === false) ||
+              afterSyncData.records.some((x) => x.synced !== true) ||
+              afterSyncData.payments.some((x) => x.synced !== true);
+            if (syncQueuedWhileBusy || stillHasUnsynced) {
+              syncQueuedWhileBusy = false;
+              if (navigator.onLine && getSyncUrl()) {
+                queueSync(500);
+              }
+            }
+          } catch (_) {}
         }
       }
 
-      function mergePulledData(d, pull) {
+      function mergePulledData(d, pull, opts = {}) {
+        const protectUnsynced = opts.protectUnsynced !== false;
         let smap = new Map(d.students.map((x) => [String(x.id), x]));
         (pull.students || []).forEach((s) => {
           s.id = String(s.id);
           s.group = String(s.group || "");
           s.phone = String(s.phone || "");
           s.guardianPhone = String(s.guardianPhone || "");
+          if (s.monthlyFee !== undefined && s.monthlyFee !== null && s.monthlyFee !== "") {
+            s.monthlyFee = Number(s.monthlyFee) || 0;
+          } else {
+            s.monthlyFee = null;
+          }
           s.days = Array.isArray(s.days) ? s.days.map(Number) : [];
           s.archived = Boolean(s.archived);
           s.synced = true;
           let old = smap.get(s.id);
-          if (!old) d.students.push(s);
-          else if (String(old.updatedAt || "") < String(s.updatedAt || ""))
-            Object.assign(old, s, { synced: true });
+          if (!old) {
+            d.students.push(s);
+            smap.set(s.id, s);
+          } else {
+            // لا تقم أبدًا بالكتابة فوق طالب تم تعديله محليًا ولم يُرفع بعد
+            if (protectUnsynced && old.synced === false) return;
+            if (isNewerTimestamp(s.updatedAt, old.updatedAt)) {
+              const preservedFee =
+                s.monthlyFee != null ? s.monthlyFee : old.monthlyFee ?? null;
+              Object.assign(old, s, { monthlyFee: preservedFee, synced: true });
+            }
+          }
         });
+
         let rmap = new Map(d.records.map((x) => [String(x.id), x]));
+        let rByStudentDate = new Map(
+          d.records.map((x) => [`${String(x.studentId)}__${normalizeLocalDate(x.date)}`, x])
+        );
         (pull.records || []).forEach((r) => {
           r.id = String(r.id);
           r.studentId = String(r.studentId ?? "");
           r.date = normalizeLocalDate(r.date);
+          r.memorizationWards = Array.isArray(r.memorizationWards) ? r.memorizationWards : [];
           r.synced = true;
-          let old = rmap.get(r.id);
-          if (!old) d.records.push(r);
-          else if (String(old.updatedAt || "") < String(r.updatedAt || ""))
-            Object.assign(old, r, { synced: true });
+          const sdKey = `${r.studentId}__${r.date}`;
+          let old = rmap.get(r.id) || rByStudentDate.get(sdKey);
+          if (!old) {
+            d.records.push(r);
+            rmap.set(r.id, r);
+            rByStudentDate.set(sdKey, r);
+          } else {
+            if (protectUnsynced && old.synced !== true) return;
+            if (isNewerTimestamp(r.updatedAt, old.updatedAt)) {
+              Object.assign(old, r, { synced: true });
+            }
+          }
         });
+
         let pmap = new Map(d.payments.map((x) => [String(x.id), x]));
         (pull.payments || []).forEach((p) => {
           p.id = String(p.id);
@@ -4903,12 +6304,24 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
             ? p.studentIds.map(String)
             : [];
           p.date = normalizeLocalDate(p.date);
+          const isSh = p.type === "shared" || p.studentIds.length > 1;
+          if (isSh) p.type = "shared";
+          p.shareAmount = getStudentPaymentShare(p);
           p.synced = true;
           let old = pmap.get(p.id);
-          if (!old) d.payments.push(p);
-          else if (String(old.updatedAt || "") < String(p.updatedAt || ""))
-            Object.assign(old, p, { synced: true });
+          if (!old) {
+            if (isSh && !p.paymentCode) p.paymentCode = nextSharedPaymentCode(d.payments);
+            d.payments.push(p);
+            pmap.set(p.id, p);
+          } else {
+            if (protectUnsynced && old.synced !== true) return;
+            if (isNewerTimestamp(p.updatedAt, old.updatedAt)) {
+              const preservedCode = p.paymentCode || old.paymentCode || "";
+              Object.assign(old, p, { paymentCode: preservedCode, synced: true });
+            }
+          }
         });
+
         d.memorization = d.memorization || [];
         let mmap = new Map(d.memorization.map((x) => [String(x.id), x]));
         (pull.memorization || []).forEach((m) => {
@@ -4917,9 +6330,15 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
           m.date = normalizeLocalDate(m.date);
           m.synced = true;
           let old = mmap.get(m.id);
-          if (!old) d.memorization.push(m);
-          else if (String(old.updatedAt || "") < String(m.updatedAt || ""))
-            Object.assign(old, m, { synced: true });
+          if (!old) {
+            d.memorization.push(m);
+            mmap.set(m.id, m);
+          } else {
+            if (protectUnsynced && old.synced === false) return;
+            if (isNewerTimestamp(m.updatedAt, old.updatedAt)) {
+              Object.assign(old, m, { synced: true });
+            }
+          }
         });
       }
 
@@ -4932,7 +6351,10 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
       }
 
       async function fullSyncNow() {
-        if (syncBusy) return;
+        if (syncBusy) {
+          syncQueuedWhileBusy = true;
+          return;
+        }
         const base = getSyncUrl().trim().replace(/\/$/, "");
         if (!base)
           return setSyncMessage("ضع رابط Google Apps Script أولًا.", false);
@@ -4957,39 +6379,44 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
           let pendingStudents = [...d.students];
           let pendingRecords = d.records.filter((x) => x.synced !== true);
           let pendingPayments = d.payments.filter((x) => x.synced !== true);
+          let delRecords = (await get("deleted_records")) || [];
+          let delPayments = (await get("deleted_payments")) || [];
+          let delWards = (await get("deleted_wards")) || [];
           while (
             pendingStudents.length ||
             pendingRecords.length ||
-            pendingPayments.length
+            pendingPayments.length ||
+            delRecords.length ||
+            delPayments.length ||
+            delWards.length
           ) {
-            let sb = pendingStudents.splice(0, 5),
-              rb = pendingRecords.splice(0, 5),
-              pb = pendingPayments.splice(0, 5);
-            if (!sb.length && !rb.length && !pb.length) break;
+            let sb = pendingStudents.splice(0, 50),
+              rb = pendingRecords.splice(0, 50),
+              pb = pendingPayments.splice(0, 50);
+            if (!sb.length && !rb.length && !pb.length && !delRecords.length && !delPayments.length && !delWards.length) break;
+            const sSentMap = new Map(sb.map((x) => [String(x.id), String(x.updatedAt || "")]));
+            const rSentMap = new Map(rb.map((x) => [String(x.id), String(x.updatedAt || "")]));
+            const pSentMap = new Map(pb.map((x) => [String(x.id), String(x.updatedAt || "")]));
             let res = await postOrJsonpGas(base, {
               action: "sync",
-              payload: { students: sb, records: rb, payments: pb },
+              payload: {
+                students: sb,
+                records: rb,
+                payments: pb,
+                deletedRecords: delRecords,
+                deletedPayments: delPayments,
+                deletedWards: delWards,
+              },
             });
             if (!res?.success)
               throw new Error(res?.message || "فشل رفع البيانات المحلية");
-            const ss = new Set(sb.map((x) => String(x.id)));
-            d.students.forEach((s) => {
-              if (ss.has(String(s.id))) s.synced = true;
-            });
-            const rs = new Set(rb.map((x) => String(x.id)));
-            d.records.forEach((r) => {
-              if (rs.has(String(r.id))) r.synced = true;
-            });
-            const ps = new Set(pb.map((x) => String(x.id)));
-            d.payments.forEach((p) => {
-              if (ps.has(String(p.id))) p.synced = true;
-            });
+            await markBatchSyncedAtomically(sSentMap, rSentMap, pSentMap);
+            if (delRecords.length) { delRecords = []; await set("deleted_records", []); }
+            if (delPayments.length) { delPayments = []; await set("deleted_payments", []); }
+            if (delWards.length) { delWards = []; await set("deleted_wards", []); }
             totalSentStudents += sb.length;
             totalSentRecords += rb.length;
             totalSentPayments += pb.length;
-            await set("students", d.students);
-            await set("records", d.records);
-            await set("payments", d.payments);
             setSyncMessage(
               `جاري المزامنة الكاملة… تم رفع ${totalSentStudents} طالب و${totalSentRecords} حضور و${totalSentPayments} دفعة`,
             );
@@ -4999,27 +6426,33 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
             throw new Error(
               pull?.message || "فشل جلب البيانات القديمة من Google Sheets",
             );
-          mergePulledData(d, pull);
-          await saveMergedData(d, pull);
+          let freshBeforeMerge = await data();
+          mergePulledData(freshBeforeMerge, pull, { protectUnsynced: true });
+          await saveMergedData(freshBeforeMerge, pull);
           setSyncMessage(
-            `اكتملت المزامنة الكاملة ✓ — ${d.students.length} طالب، ${d.records.length} سجل حضور، ${d.payments.length} دفعة`,
+            `اكتملت المزامنة الكاملة ✓ — ${freshBeforeMerge.students.length} طالب، ${freshBeforeMerge.records.length} سجل حضور، ${freshBeforeMerge.payments.length} دفعة`,
           );
           renderToday();
           renderStudents();
           renderReport();
           renderPayments();
+          renderMemorization();
           renderHome();
         } catch (e) {
           setSyncMessage("فشلت المزامنة الكاملة: " + e.message, false);
         } finally {
           syncBusy = false;
+          if (syncQueuedWhileBusy && navigator.onLine && getSyncUrl()) {
+            syncQueuedWhileBusy = false;
+            queueSync(500);
+          }
         }
       }
 
       async function exportLocalBackup() {
         let d = await data();
         const payload = {
-          version: "2.4.0",
+          version: "2.5.0",
           exportedAt: now(),
           students: d.students,
           records: d.records,
@@ -5051,12 +6484,16 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
           )
             return;
           let d = await data();
-          mergePulledData(d, {
-            students: parsed.students || [],
-            records: parsed.records || [],
-            payments: parsed.payments || [],
-            memorization: parsed.memorization || [],
-          });
+          mergePulledData(
+            d,
+            {
+              students: parsed.students || [],
+              records: parsed.records || [],
+              payments: parsed.payments || [],
+              memorization: parsed.memorization || [],
+            },
+            { protectUnsynced: false }
+          );
           d.students.forEach((s) => (s.synced = false));
           await set("students", d.students);
           await set("records", d.records);
@@ -5084,38 +6521,46 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
       }
 
       let syncTimer = null;
-      function queueSync() {
+      function queueSync(delayMs = 1200) {
+        if (syncBusy) {
+          syncQueuedWhileBusy = true;
+        }
         clearTimeout(syncTimer);
         syncTimer = setTimeout(() => {
-          if (navigator.onLine && getSyncUrl()) syncNow();
-        }, 1200);
+          if (navigator.onLine && getSyncUrl()) {
+            if (syncBusy) {
+              syncQueuedWhileBusy = true;
+            } else {
+              syncNow();
+            }
+          }
+        }, delayMs);
       }
-      $("recordDate").value = formatDateDisplay(today());
-      $("recordDate").onchange = () => {
-        let v = parseDateInput($("recordDate").value);
-        if (v) $("recordDate").value = formatDateDisplay(v);
+      setDateControlValue("recordDate", today());
+      $("recordDate").addEventListener("input", () => {
+        syncDateControlDisplay("recordDate");
         renderToday();
-      };
-      $("recordDate").onblur = () => {
-        let v = parseDateInput($("recordDate").value);
-        if ($("recordDate").value.trim() && !v) {
-          $("recordDate").value = "";
-          $("recordDate").placeholder = "اكتب يوم/شهر/سنة";
-        } else if (v) $("recordDate").value = formatDateDisplay(v);
+      });
+      $("recordDate").addEventListener("change", () => {
+        syncDateControlDisplay("recordDate");
         renderToday();
-      };
-      $("paymentDate").value = today();
-      syncPaymentDateDisplay();
+      });
+      setDateControlValue("paymentDate", today());
       $("paymentDate").addEventListener("input", syncPaymentDateDisplay);
       $("paymentDate").addEventListener("change", syncPaymentDateDisplay);
-      $("fromDate").value = formatDateDisplay(today());
-      $("toDate").value = formatDateDisplay(today());
+      $("paymentAmount")?.addEventListener("input", updateSharedPaymentLivePreview);
+      setDateControlValue("fromDate", today());
+      setDateControlValue("toDate", today());
       $("saveStudent").onclick = saveStudent;
       $("clearStudent").onclick = resetStudentForm;
       $("studentSearch").oninput = renderStudents;
       $("studentGroupFilter").onchange = renderStudents;
       $("applyBulkDays").onclick = applyBulkGroupDays;
-      $("openBulkDaysModal").onclick = () => $("bulkDaysModal").classList.remove("hidden");
+      $("openBulkDaysModal").onclick = async () => {
+        $("bulkDaysModal").classList.remove("hidden");
+        await preloadBulkGroupDays();
+      };
+      $("bulkDaysGroup")?.addEventListener("change", preloadBulkGroupDays);
       $("closeBulkDaysModal").onclick = () => $("bulkDaysModal").classList.add("hidden");
       $("bulkDaysModal").addEventListener("click", (event) => {
         if (event.target === $("bulkDaysModal")) $("bulkDaysModal").classList.add("hidden");
@@ -5138,15 +6583,9 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
         if (e.key === "Enter") record(e.target.value);
       };
       ["fromDate", "toDate"].forEach((x) =>
-        $(x).addEventListener("blur", () => {
-          let v = parseDateInput($(x).value);
-          if ($(x).value.trim() && !v) {
-            $(x).value = "";
-            $(x).placeholder = "اكتب يوم/شهر/سنة";
-          } else if (v) {
-            $(x).value = formatDateDisplay(v);
-            localStorage.setItem("report_dates_manual", "1");
-          }
+        $(x).addEventListener("change", () => {
+          syncDateControlDisplay(x);
+          localStorage.setItem("report_dates_manual", "1");
           renderReport();
         }),
       );
@@ -5170,7 +6609,7 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
       $("syncNow").onclick = syncNow;
       $("fullSyncNow").onclick = fullSyncNow;
 
-      const APP_VERSION = "2.4.0";
+      const APP_VERSION = "2.5.0";
       let updateRegistration = null;
       let updateReloading = false;
       function showUpdatePopup(version, registration) {
@@ -5305,12 +6744,14 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
 
       async function openAddWardForStudentDay(studentId, date) {
         showTab("scan");
-        $("recordDate").value = formatDateDisplay(date || today());
+        setDateControlValue("recordDate", date || today());
         $("scanId").value = String(studentId || "");
         const chk = $("includeMemorization");
         if (chk && !chk.checked) {
           chk.checked = true;
           chk.dispatchEvent(new Event("change"));
+        } else {
+          await updateNextWardSuggestionUI();
         }
         if ($("mergeDayWardsCheck")) $("mergeDayWardsCheck").checked = true;
         await renderToday();
@@ -5447,12 +6888,20 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
                       </div>
                       ${w.notes ? `<div class="mt-1 text-[11.5px] text-stone-600">💬 ${esc(w.notes)}</div>` : ""}
                     </div>
-                    ${canMutateWards ? `<button
-                      type="button"
-                      class="dh-btn dh-btn-danger text-[11px] py-1 px-2.5 rounded-xl shrink-0"
-                      title="حذف هذا الورد فقط"
-                      onclick="deleteMemorization('${escAttr(w.deleteRef)}')"
-                    >حذف الورد</button>` : ""}
+                    ${canMutateWards ? `<div class="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        class="dh-btn dh-btn-soft text-[11px] py-1 px-2.5 rounded-xl"
+                        title="تعديل بيانات هذا الورد"
+                        onclick="openEditWardModal('${escAttr(w.deleteRef)}')"
+                      >✏️ تعديل</button>
+                      <button
+                        type="button"
+                        class="dh-btn dh-btn-danger text-[11px] py-1 px-2.5 rounded-xl"
+                        title="حذف هذا الورد فقط"
+                        onclick="deleteMemorization('${escAttr(w.deleteRef)}')"
+                      >🗑️ حذف</button>
+                    </div>` : ""}
                   </div>`;
                 })
                 .join("");
@@ -5509,12 +6958,22 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
 
         // Calculate paid amount this month per student
         const paidMap = new Map();
+        const sharedCodesMap = new Map();
         d.payments
           .filter((p) => String(p.date || "").startsWith(monthPrefix))
           .forEach((p) => {
             const ids = Array.isArray(p.studentIds) ? p.studentIds.map(String) : [];
-            const share = ids.length ? (Number(p.totalAmount) || 0) / ids.length : 0;
-            ids.forEach((id) => paidMap.set(String(id), (paidMap.get(String(id)) || 0) + share));
+            const share = getStudentPaymentShare(p);
+            const isSh = p.type === "shared" || ids.length > 1;
+            ids.forEach((id) => {
+              const sid = String(id);
+              paidMap.set(sid, (paidMap.get(sid) || 0) + share);
+              if (isSh && p.paymentCode) {
+                const arr = sharedCodesMap.get(sid) || [];
+                if (!arr.includes(p.paymentCode)) arr.push(p.paymentCode);
+                sharedCodesMap.set(sid, arr);
+              }
+            });
           });
 
         let totalPaidThisMonth = 0;
@@ -5573,7 +7032,14 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
                 <span class="small">${esc(s.group || "بدون مجموعة")} · ID: ${esc(s.id)}</span>
               </td>
               <td>${fee ? moneyEGP(fee) : '<button type="button" onclick="editStudent(\'' + escAttr(s.id) + '\')" class="text-primary hover:underline text-[11.5px] font-bold">+ تحديد اشتراك</button>'}</td>
-              <td class="font-bold text-primary">${paid > 0 ? moneyEGP(paid) : '<span class="small text-stone-400">0 ج.م</span>'}</td>
+              <td class="font-bold text-primary">
+                ${paid > 0 ? moneyEGP(paid) : '<span class="small text-stone-400">0 ج.م</span>'}
+                ${
+                  (sharedCodesMap.get(String(s.id)) || []).length
+                    ? `<div class="mt-0.5"><span class="rounded-full bg-secondary/20 px-2 py-0.5 text-[10px] font-bold text-secondary">دفعة مشتركة ${(sharedCodesMap.get(String(s.id)) || []).map((c) => "#" + esc(c)).join("، ")}</span></div>`
+                    : ""
+                }
+              </td>
               <td>${
                 fee
                   ? rem > 0
@@ -5582,11 +7048,12 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
                   : '<span class="small text-stone-400">—</span>'
               }</td>
               <td>
-                <div class="flex items-center gap-1.5">
+                <div class="flex flex-wrap items-center gap-1.5">
                   <button type="button" class="dh-btn dh-btn-soft text-[11.5px] py-1 px-2.5 rounded-xl" onclick="openPaymentFor('${escAttr(s.id)}')">دفع</button>
                   ${
                     rem > 0
-                      ? `<button type="button" class="dh-btn dh-btn-gold text-[11px] py-1 px-2 rounded-xl" onclick="quickPayStudentMonth('${escAttr(s.id)}', ${rem})">سداد المتبقي (${moneyEGP(rem)})</button>`
+                      ? `<button type="button" class="dh-btn dh-btn-gold text-[11px] py-1 px-2 rounded-xl" onclick="quickPayStudentMonth('${escAttr(s.id)}', ${rem})">سداد المتبقي (${moneyEGP(rem)})</button>
+                         <button type="button" title="إرسال تذكير واتساب لولي الأمر" class="dh-btn dh-btn-outline text-[11px] py-1 px-2 rounded-xl" onclick="sendPaymentReminderWhatsApp('${escAttr(s.id)}', ${rem})">💬 واتساب</button>`
                       : ""
                   }
                 </div>
@@ -5846,6 +7313,665 @@ const QURAN_SURAH_META = [{"n":1,"name":"الفاتحة","count":7},{"n":2,"name
         showAppToast(`تم تسجيل دفعات ${selectedIds.length} طالبًا بإجمالي ${moneyEGP(totalSum)} ✓`);
         await Promise.all([renderPayments(), renderReport(), renderHome()]);
         queueSync();
+      }
+
+
+      /* ── New v2.5.0 Features: Today List Actions, Edit Ward, Group QR Cards, CSV Exports, WhatsApp Reminders, Detail Payments Table ── */
+      function renderDetailPaymentsTable() {
+        const body = $("detailPaymentBody");
+        if (!body) return;
+        const q = String($("detailPaymentSearch")?.value || "").trim().toLowerCase();
+        const filtered = (currentDetailPayments || []).filter((p) => {
+          if (!q) return true;
+          const text = `${p.paymentCode || ""} ${p.date || ""} ${formatDateDisplay(p.date || "")} ${p.period || ""} ${p.notes || ""} ${p.note || ""} ${p.type === "shared" ? "دفعة مشتركة" : "دفعة فردية"}`.toLowerCase();
+          return text.includes(q);
+        });
+        body.innerHTML =
+          filtered
+            .map((x) => {
+              const ids = Array.isArray(x.studentIds) ? x.studentIds : [];
+              const isSh = x.type === "shared" || ids.length > 1;
+              const share = getStudentPaymentShare(x);
+              const total = Number(x.totalAmount != null ? x.totalAmount : x.amount || 0) || 0;
+              return `<tr>
+                <td class="font-bold whitespace-nowrap">${esc(formatDateDisplay(x.date || ""))}</td>
+                <td>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="font-bold text-stone-800">${esc(x.period || x.notes || x.note || "سداد اشتراك")}</span>
+                    ${
+                      isSh
+                        ? `<span class="rounded-full bg-secondary/20 px-2.5 py-0.5 text-[10.5px] font-bold text-secondary">دفعة مشتركة ${x.paymentCode ? "#" + esc(x.paymentCode) : ""} (إجمالي ${money(total)} على ${ids.length} أعضاء)</span>`
+                        : `<span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">دفعة فردية</span>`
+                    }
+                  </div>
+                  ${x.notes ? `<div class="small mt-0.5 text-stone-500">${esc(x.notes)}</div>` : ""}
+                </td>
+                <td class="font-bold text-primary whitespace-nowrap">
+                  ${money(share)}
+                  ${isSh ? `<span class="block text-[10px] text-secondary font-bold">نصيب العضو</span>` : ""}
+                </td>
+              </tr>`;
+            })
+            .join("") || '<tr><td colspan="3" class="text-center text-stone-500 py-4">لا توجد دفعات مطابقة.</td></tr>';
+      }
+
+      async function preloadBulkGroupDays() {
+        const group = $("bulkDaysGroup")?.value;
+        if (!group) {
+          setBulkDays([]);
+          return;
+        }
+        const d = await data();
+        const groupStudents = d.students.filter((s) => !s.archived && String(s.group || "").trim() === group);
+        const withDays = groupStudents.find((s) => Array.isArray(s.days) && s.days.length);
+        setBulkDays(withDays ? withDays.days : []);
+      }
+
+      async function toggleTodayRecordStatus(recordId) {
+        const d = await data();
+        const rec = d.records.find((r) => String(r.id) === String(recordId));
+        if (!rec) return;
+        rec.status = rec.status === "present" ? "absent" : "present";
+        rec.updatedAt = now();
+        rec.synced = false;
+        await set("records", d.records);
+        const st = d.students.find((s) => String(s.id) === String(rec.studentId));
+        showAppToast(`تم تبديل حالة ${st?.name || rec.studentId} إلى: ${rec.status === "present" ? "حاضر ✓" : "غائب"}`);
+        await Promise.all([renderToday(), renderHome(), renderReport()]);
+        queueSync();
+      }
+
+      async function loadRecordIntoForm(recordId) {
+        const d = await data();
+        const rec = d.records.find((r) => String(r.id) === String(recordId));
+        if (!rec) return;
+        setDateControlValue("recordDate", rec.date || today());
+        $("scanId").value = String(rec.studentId);
+        $("memoryInput").value = rec.memory != null && (!rec.memorizationWards || !rec.memorizationWards.length) ? String(rec.memory) : "";
+        const wards = Array.isArray(rec.memorizationWards) ? rec.memorizationWards : [];
+        if (wards.length) {
+          $("includeMemorization").checked = true;
+          $("attendanceWardPanel").classList.remove("hidden");
+          $("attendanceWardPanel").hidden = false;
+          $("attendanceWardList").innerHTML = "";
+          wards.forEach((w) => addAttendanceWard(w));
+          updateAttendanceWardLiveSummary();
+        } else {
+          resetAttendanceWards();
+        }
+        await updateNextWardSuggestionUI();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        showAppToast("تم تحميل بيانات السجل للتعديل بالأعلى ✏️");
+      }
+
+      async function deleteSingleAttendanceRecord(recordId) {
+        const d = await data();
+        const rec = d.records.find((r) => String(r.id) === String(recordId));
+        if (!rec) return;
+        const st = d.students.find((s) => String(s.id) === String(rec.studentId));
+        if (!(await appConfirm(`هل تريد حذف سجل حضور الطالب "${st?.name || rec.studentId}" بتاريخ ${formatDateDisplay(rec.date)}؟`, "حذف سجل الحضور"))) return;
+        d.records = d.records.filter((r) => String(r.id) !== String(recordId));
+        await set("records", d.records);
+        await queueDeletedId("deleted_records", String(recordId));
+        showAppToast("تم حذف سجل الحضور ✓");
+        await Promise.all([renderToday(), renderHome(), renderReport(), renderMemorization()]);
+        queueSync();
+      }
+
+      /* ── Edit Ward Modal Logic (تعديل الورد) ── */
+      let editingWardRef = null;
+      function onEditWardRatingChange() {
+        const rating = $("editWardRating")?.value || "ممتاز";
+        if ($("editWardScore")) $("editWardScore").value = ratingToScore(rating, 100);
+      }
+      function refreshEditWardModalHints() {
+        const name = $("editWardSurah")?.value.trim() || "";
+        const surah = findSurah(name);
+        const hintEl = $("editWardSurahHint");
+        const endEl = $("editWardEndHint");
+        const fromEl = $("editWardFrom");
+        const toEl = $("editWardTo");
+        if (!surah) {
+          if (hintEl) hintEl.textContent = name ? "اختر اسم سورة صحيحاً من القائمة" : "";
+          if (endEl) endEl.textContent = "";
+          return;
+        }
+        if (hintEl) hintEl.textContent = `سورة ${surah.n} · ${surah.count} آية`;
+        fromEl.max = surah.count;
+        toEl.max = surah.count;
+        const fVal = Number(fromEl.value) || 1;
+        const tVal = Number(toEl.value) || fVal;
+        if (endEl) {
+          endEl.textContent = tVal === surah.count ? "نهاية السورة ✓" : `${Math.max(1, tVal - fVal + 1)} آية`;
+        }
+      }
+      async function openEditWardModal(ref) {
+        const d = await data();
+        let targetWard = null;
+        let wardDate = null;
+        let studentId = null;
+        if (String(ref).startsWith("recward:")) {
+          const [, recId, idxStr] = String(ref).split(":");
+          const rec = d.records.find((r) => String(r.id) === String(recId));
+          if (!rec || !Array.isArray(rec.memorizationWards)) return;
+          targetWard = normalizeWardObject(rec.memorizationWards[Number(idxStr)], Number(idxStr));
+          wardDate = rec.date;
+          studentId = rec.studentId;
+        } else {
+          const mem = (d.memorization || []).find((m) => String(m.id) === String(ref));
+          if (!mem) return;
+          targetWard = normalizeWardObject(mem, 0);
+          wardDate = mem.date;
+          studentId = mem.studentId;
+        }
+        if (!targetWard) return;
+        if (!isWardMutationAllowed(wardDate)) {
+          return appAlert("لا يمكن تعديل الورد بعد مرور 7 أيام من تسجيله.", "انتهت مهلة التعديل");
+        }
+        editingWardRef = String(ref);
+        const st = d.students.find((s) => String(s.id) === String(studentId));
+        $("editWardModalSubtitle").textContent = `${st?.name || "طالب #" + studentId} · ${formatDateDisplay(wardDate)}`;
+        $("editWardType").value = targetWard.type || "new";
+        $("editWardSurah").value = targetWard.surah || "";
+        $("editWardFrom").value = targetWard.from || 1;
+        $("editWardTo").value = targetWard.to || 1;
+        $("editWardRating").value = targetWard.rating || "ممتاز";
+        $("editWardScore").value = targetWard.score ?? ratingToScore(targetWard.rating, 100);
+        $("editWardNotes").value = targetWard.notes || "";
+        refreshEditWardModalHints();
+        $("editWardModal").classList.remove("hidden");
+      }
+      function closeEditWardModal() {
+        editingWardRef = null;
+        $("editWardModal")?.classList.add("hidden");
+      }
+      async function saveEditedWard() {
+        if (!editingWardRef) return;
+        const surah = findSurah($("editWardSurah").value);
+        if (!surah) return appAlert("اختر اسم سورة صحيحاً من القائمة.", "بيانات الورد");
+        const from = Number(toEnglishDigits($("editWardFrom").value));
+        const to = Number(toEnglishDigits($("editWardTo").value));
+        if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from || to > surah.count) {
+          return appAlert(`الآيات يجب أن تكون من 1 إلى ${surah.count} وبترتيب صحيح.`, "بيانات الورد");
+        }
+        const rating = $("editWardRating").value || "ممتاز";
+        const rawScore = toEnglishDigits($("editWardScore").value);
+        const score = rawScore !== "" && Number.isFinite(Number(rawScore))
+          ? Math.max(0, Math.min(100, Math.round(Number(rawScore))))
+          : ratingToScore(rating, 100);
+        const notes = $("editWardNotes").value.trim();
+        const type = $("editWardType").value || "new";
+
+        const d = await data();
+        if (editingWardRef.startsWith("recward:")) {
+          const [, recId, idxStr] = editingWardRef.split(":");
+          const rec = d.records.find((r) => String(r.id) === String(recId));
+          if (rec && Array.isArray(rec.memorizationWards) && rec.memorizationWards[Number(idxStr)]) {
+            const oldW = rec.memorizationWards[Number(idxStr)];
+            rec.memorizationWards[Number(idxStr)] = normalizeWardObject({
+              ...oldW,
+              type,
+              surah: surah.name,
+              surahNo: surah.n,
+              ayahCount: surah.count,
+              from,
+              to,
+              fromAyah: from,
+              toAyah: to,
+              endsSurah: to === surah.count,
+              rating,
+              score,
+              grade: `${rating} (${score}%)`,
+              notes,
+            });
+            rec.memory = computeDailyWardScore(rec.memorizationWards);
+            rec.updatedAt = now();
+            rec.synced = false;
+            await set("records", d.records);
+          }
+        } else {
+          const mem = (d.memorization || []).find((m) => String(m.id) === editingWardRef);
+          if (mem) {
+            Object.assign(
+              mem,
+              normalizeWardObject({
+                ...mem,
+                type,
+                surah: surah.name,
+                surahNo: surah.n,
+                ayahCount: surah.count,
+                from,
+                to,
+                fromAyah: from,
+                toAyah: to,
+                endsSurah: to === surah.count,
+                rating,
+                score,
+                grade: `${rating} (${score}%)`,
+                notes,
+              }),
+              { id: mem.id, studentId: mem.studentId, date: mem.date, updatedAt: now(), synced: false }
+            );
+            await set("memorization", d.memorization);
+          }
+        }
+        closeEditWardModal();
+        showAppToast("تم حفظ تعديل الورد وتحديث نسبة اليوم ✓");
+        await Promise.all([renderMemorization(), renderToday(), renderReport(), renderHome()]);
+        if (currentDetailStudentId) showStudentDetail(currentDetailStudentId);
+        queueSync();
+      }
+
+      /* ── Custom Scrollable Ward Picker (Surah & Ayah Dropdown for iPhone/iOS & Desktop) ── */
+      function closeAllWardPickerMenus(exceptMenu = null) {
+        document.querySelectorAll(".ward-picker-menu").forEach((m) => {
+          if (m !== exceptMenu) m.classList.add("hidden");
+        });
+      }
+
+      function getWardPickerContext(inputEl) {
+        const wrap = inputEl?.closest(".ward-picker-wrap");
+        if (!wrap) return null;
+        const menu = wrap.querySelector(".ward-picker-menu");
+        const kind = inputEl.getAttribute("data-ward-picker");
+        const wardItem = inputEl.closest(".ward-item");
+        const isEditModal = !wardItem && Boolean(inputEl.closest("#editWardModal"));
+        const surahInput = wardItem
+          ? wardItem.querySelector('[data-field="surah"]')
+          : isEditModal
+            ? $("editWardSurah")
+            : null;
+        const fromInput = wardItem
+          ? wardItem.querySelector('[data-field="from"]')
+          : isEditModal
+            ? $("editWardFrom")
+            : null;
+        const toInput = wardItem
+          ? wardItem.querySelector('[data-field="to"]')
+          : isEditModal
+            ? $("editWardTo")
+            : null;
+        return { wrap, menu, kind, wardItem, isEditModal, surahInput, fromInput, toInput };
+      }
+
+      function openWardPickerMenu(inputEl, filterMode = false) {
+        const ctx = getWardPickerContext(inputEl);
+        if (!ctx || !ctx.menu) return;
+        const { menu, kind, surahInput, fromInput } = ctx;
+        closeAllWardPickerMenus(menu);
+
+        if (kind === "surah") {
+          const rawVal = String(inputEl.value || "").trim();
+          const exactSurah = findSurah(rawVal);
+          const qNorm = normalizeArabicSearch(rawVal);
+          const qDigits = toEnglishDigits(rawVal).replace(/[^\d]/g, "");
+          let list = QURAN_SURAH_META;
+          if (filterMode && rawVal && !exactSurah) {
+            list = QURAN_SURAH_META.filter(
+              (s) =>
+                normalizeArabicSearch(s.name).includes(qNorm) ||
+                (qDigits && String(s.n).includes(qDigits))
+            );
+          }
+          if (!list.length) {
+            menu.innerHTML = '<div class="group-empty">لا توجد سورة مطابقة</div>';
+          } else {
+            menu.innerHTML = list
+              .map((s) => {
+                const isAct = exactSurah && exactSurah.n === s.n;
+                return `<button type="button" class="ward-picker-option ${isAct ? "active" : ""}" data-pick-val="${escAttr(s.name)}">
+                  <span>${s.n}. سورة ${esc(s.name)}</span>
+                  <span class="text-[11px] opacity-75">${s.count} آية</span>
+                </button>`;
+              })
+              .join("");
+          }
+          menu.classList.remove("hidden");
+          const activeBtn = menu.querySelector(".ward-picker-option.active");
+          if (activeBtn) {
+            setTimeout(() => {
+              try {
+                activeBtn.scrollIntoView({ block: "nearest" });
+              } catch (_) {}
+            }, 0);
+          }
+          return;
+        }
+
+        if (kind === "from" || kind === "to") {
+          const surah = findSurah(surahInput?.value || "");
+          const maxAyah = surah ? surah.count : 286;
+          const startAyah =
+            kind === "to" && !filterMode
+              ? Math.max(1, Math.min(maxAyah, Number(toEnglishDigits(fromInput?.value || "1")) || 1))
+              : 1;
+          const currentNum = Number(toEnglishDigits(inputEl.value || "")) || 1;
+          const typedDigits = filterMode ? toEnglishDigits(inputEl.value || "").trim() : "";
+
+          const nums = [];
+          for (let i = startAyah; i <= maxAyah; i++) {
+            if (!typedDigits || String(i).startsWith(typedDigits) || String(i) === typedDigits) {
+              nums.push(i);
+            }
+          }
+          if (!nums.length) {
+            for (let i = 1; i <= maxAyah; i++) nums.push(i);
+          }
+
+          menu.innerHTML = nums
+            .map((num) => {
+              const isEnd = surah && num === surah.count;
+              const isAct = num === currentNum;
+              return `<button type="button" class="ward-picker-option ${isAct ? "active" : ""}" data-pick-val="${num}">
+                <span>آية ${num}</span>
+                <span class="text-[11px] opacity-75">${isEnd ? "نهاية السورة ⭐" : surah ? "من " + surah.count : ""}</span>
+              </button>`;
+            })
+            .join("");
+          menu.classList.remove("hidden");
+          const activeBtn = menu.querySelector(".ward-picker-option.active");
+          if (activeBtn) {
+            setTimeout(() => {
+              try {
+                activeBtn.scrollIntoView({ block: "nearest" });
+              } catch (_) {}
+            }, 0);
+          }
+        }
+      }
+
+      function applyWardPickerValue(optionBtn) {
+        const wrap = optionBtn.closest(".ward-picker-wrap");
+        if (!wrap) return;
+        const inputEl = wrap.querySelector("[data-ward-picker]");
+        const menu = wrap.querySelector(".ward-picker-menu");
+        if (!inputEl) return;
+        const val = optionBtn.getAttribute("data-pick-val") || "";
+        inputEl.value = val;
+        if (menu) menu.classList.add("hidden");
+
+        const ctx = getWardPickerContext(inputEl);
+        if (ctx?.wardItem) {
+          if (ctx.kind === "from" && ctx.toInput && Number(ctx.toInput.value) < Number(val)) {
+            ctx.toInput.value = val;
+          }
+          refreshWardItem(ctx.wardItem, null);
+          updateAttendanceWardLiveSummary();
+        } else if (ctx?.isEditModal) {
+          if (ctx.kind === "from" && ctx.toInput && Number(ctx.toInput.value) < Number(val)) {
+            ctx.toInput.value = val;
+          }
+          refreshEditWardModalHints();
+        }
+      }
+
+      document.addEventListener("focusin", (e) => {
+        const inputEl = e.target?.closest?.("[data-ward-picker]");
+        if (inputEl) openWardPickerMenu(inputEl, false);
+      });
+
+      document.addEventListener("input", (e) => {
+        const inputEl = e.target?.closest?.("[data-ward-picker]");
+        if (inputEl) openWardPickerMenu(inputEl, true);
+      });
+
+      document.addEventListener("pointerdown", (e) => {
+        const optBtn = e.target?.closest?.(".ward-picker-option[data-pick-val]");
+        if (optBtn) {
+          e.preventDefault();
+          applyWardPickerValue(optBtn);
+          return;
+        }
+        const toggleBtn = e.target?.closest?.("[data-ward-picker-btn]");
+        if (toggleBtn) {
+          e.preventDefault();
+          const wrap = toggleBtn.closest(".ward-picker-wrap");
+          const inputEl = wrap?.querySelector("[data-ward-picker]");
+          const menu = wrap?.querySelector(".ward-picker-menu");
+          if (menu && !menu.classList.contains("hidden")) {
+            menu.classList.add("hidden");
+          } else if (inputEl) {
+            inputEl.focus();
+            openWardPickerMenu(inputEl, false);
+          }
+          return;
+        }
+        if (!e.target?.closest?.(".ward-picker-wrap")) {
+          closeAllWardPickerMenus();
+        }
+      });
+
+      /* ── Direct WhatsApp Notifications for Overdue Payments & Absences ── */
+      async function sendPaymentReminderWhatsApp(studentId, remAmount = null) {
+        const d = await data();
+        const s = d.students.find((x) => String(x.id) === String(studentId));
+        if (!s) return;
+        const rawPhone = String(s.guardianPhone || s.phone || "").replace(/[^\d]/g, "");
+        if (!rawPhone) {
+          return appAlert(`لا يوجد رقم هاتف مسجل لولي أمر الطالب "${s.name}". أضفه من زر «تعديل» أولاً.`);
+        }
+        const intlPhone = rawPhone.startsWith("00")
+          ? rawPhone.slice(2)
+          : rawPhone.startsWith("0")
+            ? "20" + rawPhone.slice(1)
+            : rawPhone;
+        const currentMonthName = formatArabicFullDate(today()).split(" ").slice(2).join(" ") || today().slice(0, 7);
+        const amtPart = remAmount != null && remAmount > 0
+          ? `وقيمته المتبقية: ${money(remAmount)}`
+          : s.monthlyFee
+            ? `وقيمته: ${money(s.monthlyFee)}`
+            : "";
+        const text = buildCustomWhatsAppMessage("payment", {
+          studentName: s.name,
+          groupName: s.group || "بدون مجموعة",
+          monthLine: `عن شهر: ${currentMonthName} ${amtPart}`.trim()
+        });
+        window.open(`https://wa.me/${intlPhone}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+      }
+
+      async function sendAbsenceWhatsAppDirect(studentId, dateIso = null) {
+        const d = await data();
+        const s = d.students.find((x) => String(x.id) === String(studentId));
+        if (!s) return;
+        const rawPhone = String(s.guardianPhone || s.phone || "").replace(/[^\d]/g, "");
+        if (!rawPhone) {
+          return appAlert(`لا يوجد رقم هاتف مسجل لولي أمر الطالب "${s.name}". أضفه من زر «تعديل» أولاً.`);
+        }
+        const intlPhone = rawPhone.startsWith("00")
+          ? rawPhone.slice(2)
+          : rawPhone.startsWith("0")
+            ? "20" + rawPhone.slice(1)
+            : rawPhone;
+        const targetDate = dateIso || today();
+        const text = buildCustomWhatsAppMessage("absence", {
+          studentName: s.name,
+          dateText: formatArabicFullDate(targetDate)
+        });
+        window.open(`https://wa.me/${intlPhone}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+      }
+
+      /* ── Group QR Cards Modal & Sheet Download (بطاقات QR للمجموعة) ── */
+      async function openGroupQrModal() {
+        const d = await data();
+        const active = d.students.filter((s) => !s.archived);
+        const groups = [...new Set(active.map((s) => String(s.group || "").trim()).filter(Boolean))].sort((a, b) =>
+          a.localeCompare(b, "ar")
+        );
+        const sel = $("groupQrSelect");
+        if (sel) {
+          sel.innerHTML =
+            groups.map((g) => `<option value="${escAttr(g)}">مجموعة: ${esc(g)}</option>`).join("") +
+            '<option value="__all__">كل الطلاب النشطين</option>';
+        }
+        await renderGroupQrCards();
+        $("groupQrModal").classList.remove("hidden");
+      }
+      function closeGroupQrModal() {
+        $("groupQrModal")?.classList.add("hidden");
+      }
+      function drawQrToCanvas(canvas, text, size = 160) {
+        if (typeof qrcode !== "function" || !canvas) return;
+        const qr = qrcode(0, "M");
+        qr.addData(String(text));
+        qr.make();
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        const count = qr.getModuleCount();
+        const scale = Math.floor((size - 16) / count);
+        const offset = Math.floor((size - scale * count) / 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, size, size);
+        ctx.fillStyle = "#114e3c";
+        for (let r = 0; r < count; r++) {
+          for (let c = 0; c < count; c++) {
+            if (qr.isDark(r, c)) {
+              ctx.fillRect(offset + c * scale, offset + r * scale, scale, scale);
+            }
+          }
+        }
+      }
+      async function renderGroupQrCards() {
+        const d = await data();
+        const gVal = $("groupQrSelect")?.value || "__all__";
+        const list = d.students
+          .filter((s) => !s.archived && (gVal === "__all__" || String(s.group || "").trim() === gVal))
+          .sort((a, b) => String(a.name).localeCompare(String(b.name), "ar"));
+        const grid = $("groupQrCardsGrid");
+        if (!grid) return;
+        if (!list.length) {
+          grid.innerHTML = '<div class="col-span-3 text-center py-8 text-stone-500 text-[13px]">لا يوجد طلاب نشطون في هذه المجموعة.</div>';
+          return;
+        }
+        grid.innerHTML = list
+          .map(
+            (s) => `
+            <div class="rounded-2xl border border-primary/20 bg-white p-3 text-center flex flex-col items-center">
+              <p class="font-display text-[15px] font-bold text-primary truncate w-full">${esc(s.name)}</p>
+              <p class="text-[11px] text-stone-500">${esc(s.group || "بدون مجموعة")}</p>
+              <canvas data-qr-student-id="${escAttr(s.id)}" style="width: 140px; height: 140px; margin: 8px auto; padding: 4px;"></canvas>
+              <span class="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary">ID: ${esc(s.id)}</span>
+            </div>`
+          )
+          .join("");
+        grid.querySelectorAll("canvas[data-qr-student-id]").forEach((cv) => {
+          drawQrToCanvas(cv, cv.getAttribute("data-qr-student-id"), 160);
+        });
+      }
+      async function downloadGroupQrSheetPng() {
+        const d = await data();
+        const gVal = $("groupQrSelect")?.value || "__all__";
+        const list = d.students
+          .filter((s) => !s.archived && (gVal === "__all__" || String(s.group || "").trim() === gVal))
+          .sort((a, b) => String(a.name).localeCompare(String(b.name), "ar"));
+        if (!list.length) return appAlert("لا يوجد طلاب لتحميل بطاقاتهم.");
+        const cols = Math.min(3, list.length);
+        const rows = Math.ceil(list.length / cols);
+        const cardW = 280,
+          cardH = 320,
+          pad = 24;
+        const sheet = document.createElement("canvas");
+        sheet.width = cols * cardW + (cols + 1) * pad;
+        sheet.height = rows * cardH + (rows + 1) * pad + 60;
+        const ctx = sheet.getContext("2d");
+        ctx.fillStyle = "#faf5eb";
+        ctx.fillRect(0, 0, sheet.width, sheet.height);
+        ctx.fillStyle = "#114e3c";
+        ctx.font = "bold 24px Tajawal, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(
+          `دار الحافظ — بطاقات QR (${gVal === "__all__" ? "كل الطلاب" : gVal})`,
+          sheet.width / 2,
+          42
+        );
+        list.forEach((s, idx) => {
+          const r = Math.floor(idx / cols);
+          const c = idx % cols;
+          const x = pad + c * (cardW + pad);
+          const y = 65 + pad + r * (cardH + pad);
+          ctx.fillStyle = "#ffffff";
+          ctx.strokeStyle = "#114e3c";
+          ctx.lineWidth = 2;
+          ctx.fillRect(x, y, cardW, cardH);
+          ctx.strokeRect(x, y, cardW, cardH);
+          ctx.fillStyle = "#114e3c";
+          ctx.font = "bold 18px Tajawal, sans-serif";
+          ctx.fillText(String(s.name || "").slice(0, 26), x + cardW / 2, y + 34);
+          ctx.fillStyle = "#78716c";
+          ctx.font = "14px Tajawal, sans-serif";
+          ctx.fillText(String(s.group || "بدون مجموعة"), x + cardW / 2, y + 58);
+          const qrCv = document.createElement("canvas");
+          drawQrToCanvas(qrCv, s.id, 180);
+          ctx.drawImage(qrCv, x + (cardW - 180) / 2, y + 72);
+          ctx.fillStyle = "#114e3c";
+          ctx.font = "bold 17px Tajawal, sans-serif";
+          ctx.fillText(`ID: ${s.id}`, x + cardW / 2, y + 286);
+        });
+        const a = document.createElement("a");
+        a.href = sheet.toDataURL("image/png");
+        a.download = `QR-Group-${gVal === "__all__" ? "All" : gVal}.png`;
+        a.click();
+        showAppToast("تم تحميل لوحة بطاقات QR بنجاح ✓");
+      }
+
+      /* ── CSV / Excel Exports (تصدير التقارير والمدفوعات إلى Excel) ── */
+      function downloadCsvFile(filename, headers, rows) {
+        const escapeCell = (val) => {
+          const s = String(val ?? "").replace(/"/g, '""');
+          return /[",\n\r]/.test(s) ? `"${s}"` : s;
+        };
+        const lines = [headers.map(escapeCell).join(",")];
+        rows.forEach((r) => lines.push(r.map(escapeCell).join(",")));
+        const csvContent = "\uFEFF" + lines.join("\r\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      }
+
+      async function exportReportCsv() {
+        const d = await data();
+        const activeStudents = d.students.filter((s) => !s.archived);
+        const from = getSelectedDate("fromDate", "0000-00-00");
+        const to = getSelectedDate("toDate", "9999-99-99");
+        const r = d.records.filter((x) => x.date >= from && x.date <= to);
+        const cd = buildClassDates(d, from, to);
+        const headers = ["ID الطالب", "الاسم", "المجموعة", "أيام الحضور", "أيام الغياب", "نسبة الحضور %", "متوسط الحفظ %", "الهاتف", "هاتف ولي الأمر"];
+        const rows = activeStudents.map((s) => {
+          const st = attStats(d, s, from, to, cd);
+          const a = r.filter((x) => String(x.studentId) === String(s.id));
+          const mm = a.filter((x) => x.memory != null);
+          const avg = mm.length ? Math.round(mm.reduce((z, x) => z + x.memory, 0) / mm.length) : 0;
+          return [s.id, s.name, s.group || "", st.p, st.a, st.rate, avg, s.phone || "", s.guardianPhone || ""];
+        });
+        downloadCsvFile(`dar-alhafiz-report-${today()}.csv`, headers, rows);
+        showAppToast("تم تصدير التقرير لملف Excel (CSV) ✓");
+      }
+
+      async function exportPaymentsCsv() {
+        const d = await data();
+        const headers = ["رقم الدفعة", "التاريخ", "الفترة", "النوع", "الطلاب المشاركون", "المبلغ الإجمالي (ج.م)", "نصيب الفرد (ج.م)", "المجموعة", "ملاحظات"];
+        const sorted = [...d.payments].sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+        const rows = sorted.map((p) => {
+          const ids = Array.isArray(p.studentIds) ? p.studentIds : [];
+          const isSh = p.type === "shared" || ids.length > 1;
+          const share = getStudentPaymentShare(p);
+          return [
+            p.paymentCode || (isSh ? "مشتركة" : "فردية"),
+            p.date || "",
+            p.period || "",
+            isSh ? "دفعة مشتركة" : "دفعة فردية",
+            paymentStudentsText(p, d.students),
+            Number(p.totalAmount || 0),
+            share,
+            p.group || "",
+            p.notes || "",
+          ];
+        });
+        downloadCsvFile(`dar-alhafiz-payments-${today()}.csv`, headers, rows);
+        showAppToast("تم تصدير سجل المدفوعات لملف Excel (CSV) ✓");
       }
 
       if ($("memSearch")) $("memSearch").addEventListener("input", renderMemorization);
